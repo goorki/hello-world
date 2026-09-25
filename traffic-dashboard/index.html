@@ -1,0 +1,1378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gantry G-07 Flow Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;700;800&family=Overpass+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  color-scheme: light;
+  --page:#eef1ee; --surface:#fcfcfb; --surface-2:#f3f5f2; --ink:#111814; --ink-2:#4b544f; --muted:#7d857f;
+  --grid:#e2e5e0; --axis:#c2c8c2; --border:rgba(17,24,20,.12);
+  --sign:#0d5c45; --sign-ink:#ffffff; --sign-2:#0a4a37;
+  --accent:#0d6b50; --accent-ink:#ffffff; --accent-wash:rgba(13,107,80,.10);
+  --vms-bg:#121411; --vms-ink:#ffb52e; --vms-off:#2a2a22;
+  /* categorical: vehicle classes */
+  --c-car:#2a78d6; --c-lcv:#eb6834; --c-bus:#1baf7a; --c-hgv:#eda100; --c-moto:#e87ba4;
+  /* ordinal: lanes (right -> left) */
+  --l1:#a79cf0; --l2:#6f5fd6; --l3:#3a2b8f;
+  /* sequential: congestion intensity (slow = strong) */
+  --h0:#cde2fb; --h1:#9ec5f4; --h2:#6da7ec; --h3:#3987e5; --h4:#256abf; --h5:#184f95; --h6:#0d366b;
+  --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b; --good-ink:#006300;
+  --pt-base:rgba(17,24,20,.16);
+  --tip-bg:#111814; --tip-ink:#f3f5f2; --tip-2:#b9c2bd;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --page:#0c100e; --surface:#161b18; --surface-2:#1d2420; --ink:#eef2ef; --ink-2:#b7c0bb; --muted:#89918c;
+    --grid:#28302c; --axis:#3a433e; --border:rgba(255,255,255,.10);
+    --sign:#0b5540; --sign-ink:#ffffff; --sign-2:#083f30;
+    --accent:#3fb489; --accent-ink:#06140e; --accent-wash:rgba(63,180,137,.14);
+    --vms-bg:#050605; --vms-ink:#ffb52e; --vms-off:#1b1b16;
+    --c-car:#3987e5; --c-lcv:#d95926; --c-bus:#199e70; --c-hgv:#c98500; --c-moto:#d55181;
+    --l1:#5c4ec9; --l2:#8e82ea; --l3:#c9c2f8;
+    --h0:#1a2a40; --h1:#184f95; --h2:#256abf; --h3:#3987e5; --h4:#6da7ec; --h5:#9ec5f4; --h6:#cde2fb;
+    --good-ink:#0ca30c;
+    --pt-base:rgba(255,255,255,.16);
+    --tip-bg:#eef2ef; --tip-ink:#111814; --tip-2:#4b544f;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --page:#0c100e; --surface:#161b18; --surface-2:#1d2420; --ink:#eef2ef; --ink-2:#b7c0bb; --muted:#89918c;
+  --grid:#28302c; --axis:#3a433e; --border:rgba(255,255,255,.10);
+  --sign:#0b5540; --sign-ink:#ffffff; --sign-2:#083f30;
+  --accent:#3fb489; --accent-ink:#06140e; --accent-wash:rgba(63,180,137,.14);
+  --vms-bg:#050605; --vms-ink:#ffb52e; --vms-off:#1b1b16;
+  --c-car:#3987e5; --c-lcv:#d95926; --c-bus:#199e70; --c-hgv:#c98500; --c-moto:#d55181;
+  --l1:#5c4ec9; --l2:#8e82ea; --l3:#c9c2f8;
+  --h0:#1a2a40; --h1:#184f95; --h2:#256abf; --h3:#3987e5; --h4:#6da7ec; --h5:#9ec5f4; --h6:#cde2fb;
+  --good-ink:#0ca30c;
+  --pt-base:rgba(255,255,255,.16);
+  --tip-bg:#eef2ef; --tip-ink:#111814; --tip-2:#4b544f;
+}
+*{box-sizing:border-box}
+html,body{background:var(--page)}
+body{margin:0;color:var(--ink);font:15px/1.5 "Overpass",system-ui,-apple-system,"Segoe UI",sans-serif;padding-inline:16px;padding-block:0 48px}
+.wrap{max-width:1320px;margin:0 auto}
+.mono,.num{font-family:"Overpass Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;font-variant-numeric:tabular-nums}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+h2{font-size:1.25rem;font-weight:800;letter-spacing:-.005em}
+h3{font-size:.95rem;font-weight:700}
+.eyebrow{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700}
+p{margin:0}
+.sub{color:var(--ink-2);font-size:.88rem;max-width:68ch}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------- gantry sign header ---------- */
+.sign{margin-inline:-16px;background:var(--sign);color:var(--sign-ink);padding-inline:16px;padding-block:18px 16px;border-bottom:6px solid var(--sign-2)}
+.sign .wrap{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:flex-end;justify-content:space-between}
+.sign h1{font-size:clamp(1.5rem,3.4vw,2.3rem);font-weight:800;letter-spacing:-.01em}
+.sign .meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.85rem;opacity:.9}
+.sign .shield{display:inline-flex;align-items:center;gap:8px;border:2px solid currentColor;border-radius:6px;padding:1px 8px 0;font-weight:800;font-size:.8rem;letter-spacing:.06em}
+.sign .src{font-size:.82rem;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--border);background:var(--surface);color:var(--ink);border-radius:8px;padding:6px 12px 4px;cursor:pointer;font-weight:600;font-size:.85rem;display:inline-flex;gap:6px;align-items:center}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.sign .btn{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.35);color:#fff}
+.sign .btn:hover{background:rgba(255,255,255,.22)}
+.file-btn input{position:absolute;opacity:0;width:1px;height:1px}
+
+/* ---------- control bar ---------- */
+.controls{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;margin-inline:-16px;padding-inline:16px;padding-block:10px;background:color-mix(in srgb,var(--page) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+.controls .wrap{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.clock{font-family:"Overpass Mono",monospace;font-size:1.35rem;font-weight:600;min-width:5ch;font-variant-numeric:tabular-nums}
+.slider{flex:1 1 260px;display:flex;align-items:center;gap:10px;min-width:0}
+input[type=range]{flex:1;accent-color:var(--accent);min-width:0}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;padding:5px 10px 3px;cursor:pointer;font-size:.82rem;font-weight:600;color:var(--ink-2)}
+.seg button+button{border-left:1px solid var(--border)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.ctl-label{font-size:.75rem;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+
+section{margin-top:28px;display:grid;gap:14px}
+.sec-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:8px 20px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;min-width:0}
+.card-head{display:flex;justify-content:space-between;align-items:baseline;gap:6px 14px;flex-wrap:wrap;margin-bottom:8px}
+.card-head .note{font-size:.78rem;color:var(--muted)}
+.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:14px}
+.grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:14px}
+
+/* ---------- situation ---------- */
+.situation{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px}
+@media (max-width:900px){.situation{grid-template-columns:1fr}}
+.state{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
+.los{width:92px;height:92px;border-radius:12px;display:grid;place-items:center;font-weight:800;font-size:3.3rem;line-height:1;border:3px solid var(--ink);padding-top:6px;position:relative}
+.los small{position:absolute;top:6px;font-size:.62rem;letter-spacing:.1em;font-weight:700}
+.los[data-sev="good"]{border-color:var(--good)} .los[data-sev="warning"]{border-color:var(--warning)}
+.los[data-sev="serious"]{border-color:var(--serious)} .los[data-sev="critical"]{border-color:var(--critical);background:color-mix(in srgb,var(--critical) 12%,transparent)}
+.state .desc{display:grid;gap:4px}
+.state .desc strong{font-size:1.15rem}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-top:14px}
+@media (max-width:520px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--surface);padding:10px 12px;display:grid;gap:2px;align-content:start}
+.kpi .v{font-size:1.45rem;font-weight:700;letter-spacing:-.01em}
+.kpi .v small{font-size:.72rem;font-weight:600;color:var(--muted);margin-left:3px}
+.kpi .d{font-size:.75rem;color:var(--muted)}
+.kpi .d.up{color:var(--good-ink)} .kpi .d.down{color:var(--critical)}
+
+.vms{background:var(--vms-bg);border-radius:8px;padding:14px 16px;border:4px solid #2d302b;display:grid;gap:4px;min-height:112px;align-content:center;
+  background-image:radial-gradient(var(--vms-off) 1px,transparent 1.3px);background-size:5px 5px}
+.vms .line{font-family:"Overpass Mono",monospace;font-weight:600;color:var(--vms-ink);text-transform:uppercase;letter-spacing:.14em;font-size:clamp(.85rem,2.2vw,1.15rem);text-align:center;text-shadow:0 0 6px rgba(255,181,46,.45)}
+.vms .line.dim{opacity:.35}
+.vms-cap{display:flex;justify-content:space-between;gap:8px;font-size:.75rem;color:var(--muted);margin-top:6px;flex-wrap:wrap}
+
+.recs{display:grid;gap:8px;margin-top:12px}
+.rec{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;padding:10px 12px;border-radius:8px;background:var(--surface-2);border:1px solid var(--border)}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;border-radius:999px;padding:3px 8px 1px;white-space:nowrap;border:1.5px solid currentColor;height:fit-content}
+.chip svg{width:11px;height:11px;flex:none}
+.chip[data-sev="critical"]{color:var(--critical)} .chip[data-sev="serious"]{color:var(--serious)}
+.chip[data-sev="warning"]{color:var(--ink);border-color:var(--warning);background:color-mix(in srgb,var(--warning) 22%,transparent)}
+.chip[data-sev="good"]{color:var(--good-ink)} .chip[data-sev="info"]{color:var(--ink-2)}
+.rec .t{font-weight:700;font-size:.92rem}
+.rec .why{grid-column:2;font-size:.8rem;color:var(--ink-2)}
+.rec .act{grid-column:2;font-size:.82rem}
+.rec .act b{font-weight:700}
+
+/* ---------- charts ---------- */
+.chart{position:relative;width:100%}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{fill:var(--muted);font-family:"Overpass Mono",ui-monospace,monospace;font-size:10.5px;font-variant-numeric:tabular-nums}
+.chart .ttl{fill:var(--ink-2);font-family:"Overpass",system-ui,sans-serif;font-size:11px;font-weight:600}
+.chart .lbl{fill:var(--ink);font-family:"Overpass",system-ui,sans-serif;font-size:11px;font-weight:700}
+.gridl{stroke:var(--grid);stroke-width:1}
+.axisl{stroke:var(--axis);stroke-width:1}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.78rem;color:var(--ink-2);margin-bottom:6px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:12px;height:10px;border-radius:2px}
+.legend i.line{height:3px;border-radius:2px;width:16px}
+.legend i.dash{height:0;border-top:2px dashed;width:16px;border-radius:0}
+.legend i.dot{width:9px;height:9px;border-radius:50%}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px 14px;margin-top:10px;font-size:.8rem}
+.stats div{display:grid}
+.stats span{color:var(--muted);font-size:.72rem}
+.stats b{font-family:"Overpass Mono",monospace;font-weight:600;font-variant-numeric:tabular-nums}
+
+.filters{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)}
+.filters .grp{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tog{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:999px;padding:3px 10px 1px;font-size:.8rem;cursor:pointer;background:var(--surface);user-select:none}
+.tog input{position:absolute;opacity:0;pointer-events:none}
+.tog i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.tog:has(input:not(:checked)){opacity:.45;text-decoration:line-through}
+.tog:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+select{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:4px 8px 2px}
+.field{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;color:var(--ink-2)}
+.field input[type=number]{width:5.5em;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 6px 1px}
+
+.tl-wrap{overflow-x:auto}
+.tip{position:fixed;z-index:50;pointer-events:none;background:var(--tip-bg);color:var(--tip-ink);border-radius:8px;padding:8px 10px 6px;font-size:.78rem;min-width:140px;max-width:280px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+.tip .h{color:var(--tip-2);font-size:.72rem;margin-bottom:4px}
+.tip .r{display:grid;grid-template-columns:14px auto 1fr;gap:6px;align-items:center}
+.tip .r b{font-family:"Overpass Mono",monospace;font-weight:600;font-variant-numeric:tabular-nums}
+.tip .r span{color:var(--tip-2)}
+.tip .k{height:3px;border-radius:2px}
+
+.tbl-wrap{overflow:auto;max-height:340px;border:1px solid var(--border);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:.8rem}
+th,td{padding:6px 10px 4px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+th{position:sticky;top:0;background:var(--surface-2);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);z-index:1}
+td.n,th.n{text-align:right;font-family:"Overpass Mono",monospace;font-variant-numeric:tabular-nums}
+details{font-size:.85rem}
+details summary{cursor:pointer;color:var(--ink-2);font-weight:600;padding-block:4px}
+.econ-out{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-top:10px}
+.econ-out div{background:var(--surface);padding:8px 10px;display:grid}
+.econ-out span{font-size:.72rem;color:var(--muted)}
+.econ-out b{font-family:"Overpass Mono",monospace;font-size:1.05rem;font-weight:600}
+.formula{font-family:"Overpass Mono",monospace;font-size:.78rem;color:var(--ink-2);background:var(--surface-2);border-radius:6px;padding:8px 10px;margin-top:10px;line-height:1.6;overflow-x:auto}
+.dq{display:grid;gap:6px;font-size:.82rem}
+.dq .row{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--border);padding-bottom:4px}
+.dq .row b{font-family:"Overpass Mono",monospace;font-weight:600}
+.notice{font-size:.8rem;color:var(--ink-2);padding:8px 10px;border-radius:8px;background:var(--accent-wash)}
+footer{margin-top:36px;font-size:.78rem;color:var(--muted);max-width:90ch}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header class="sign">
+  <div class="wrap">
+    <div style="display:grid;gap:6px">
+      <div class="meta"><span class="shield">A-7 NORTH</span><span>Open-road tolling gantry · km 42+300</span><span id="dateLabel">—</span></div>
+      <h1>Gantry G-07 Flow Desk</h1>
+      <div class="meta"><span id="dsLabel">Loading sample day…</span></div>
+    </div>
+    <div class="src">
+      <label class="btn file-btn" for="csvIn">Load CSV<input type="file" id="csvIn" accept=".csv,.txt,text/csv"></label>
+      <button class="btn" id="sampleBtn" type="button">Reload sample day</button>
+    </div>
+  </div>
+</header>
+
+<div class="controls" role="region" aria-label="Time controls">
+  <div class="wrap">
+    <div style="display:grid">
+      <span class="ctl-label">Decision time</span>
+      <span class="clock" id="clock">--:--</span>
+    </div>
+    <button class="btn primary" id="playBtn" type="button" aria-pressed="false">▶ Replay</button>
+    <div class="slider">
+      <input type="range" id="cursor" min="0" max="287" value="96" aria-label="Decision time (5-minute steps)">
+    </div>
+    <div style="display:grid;gap:2px">
+      <span class="ctl-label">Analysis window</span>
+      <div class="seg" id="winSeg">
+        <button type="button" data-w="3">15 min</button>
+        <button type="button" data-w="12" aria-pressed="true">1 h</button>
+        <button type="button" data-w="36">3 h</button>
+        <button type="button" data-w="0">Full day</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+
+<!-- ================= DECISION SUPPORT ================= -->
+<section aria-labelledby="dssH">
+  <div class="sec-head">
+    <div>
+      <div class="eyebrow">Decision support · all lanes, all classes · last 15 min</div>
+      <h2 id="dssH">What the operator should do now</h2>
+    </div>
+    <p class="sub">Rules run on 5-minute aggregates of every crossing at the gantry. Move the decision time or press Replay to step through the day.</p>
+  </div>
+
+  <div class="situation">
+    <div class="card">
+      <div class="state">
+        <div class="los" id="losBox" data-sev="good"><small>LOS</small><span id="losLetter">–</span></div>
+        <div class="desc">
+          <span class="eyebrow" id="regimeEyebrow">Traffic state</span>
+          <strong id="regimeText">—</strong>
+          <span class="sub" id="regimeSub">—</span>
+        </div>
+      </div>
+      <div class="kpis" id="kpis"></div>
+      <div class="recs" id="recs" aria-live="polite"></div>
+    </div>
+    <div class="card" style="display:grid;gap:12px;align-content:start">
+      <div>
+        <div class="card-head"><h3>Upstream VMS · km 39+800</h3><span class="note">Proposed message</span></div>
+        <div class="vms" id="vms"></div>
+        <div class="vms-cap"><span id="vmsCap">—</span><span>Lane control signals: <b id="lcs" class="mono">—</b></span></div>
+      </div>
+      <div>
+        <div class="card-head"><h3>Alert timeline</h3><span class="note">Click a bar to jump there</span></div>
+        <div class="tl-wrap"><div class="chart" id="chTimeline"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PRICING ================= -->
+<section aria-labelledby="econH">
+  <div class="sec-head">
+    <div>
+      <div class="eyebrow">Transport economics · Pigouvian congestion charge</div>
+      <h2 id="econH">Dynamic toll recommendation</h2>
+    </div>
+    <p class="sub">Travel cost on the tolled section comes from the fitted speed–density model. The optimal charge is the marginal external cost where inverse demand meets marginal social cost.</p>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-head"><h3>Cost curves per lane at the decision time</h3><span class="note" id="econNote">—</span></div>
+      <div class="legend" id="econLegend"></div>
+      <div class="chart" id="chEcon"></div>
+    </div>
+    <div class="card" style="display:grid;gap:10px;align-content:start">
+      <div class="filters" style="padding:8px 10px">
+        <label class="field" for="vot">Value of time <input type="number" id="vot" value="15" min="1" max="100" step="0.5"> €/h</label>
+        <label class="field" for="secLen">Section <input type="number" id="secLen" value="10" min="1" max="100" step="0.5"> km</label>
+        <label class="field" for="elas">Demand elasticity <input type="number" id="elas" value="-0.4" min="-3" max="-0.05" step="0.05"></label>
+        <label class="field" for="baseToll">Car tariff <input type="number" id="baseToll" value="0.90" min="0" max="50" step="0.05"> €</label>
+      </div>
+      <div class="econ-out" id="econOut"></div>
+      <div class="notice" id="econRec">—</div>
+      <div class="formula">
+        AC(q) = VOT · L / v(q) &nbsp;·&nbsp; MSC(q) = AC + q·dAC/dq<br>
+        P(q) = p₀·[1 + (q/q₀ − 1)/ε], &nbsp;p₀ = AC(q₀) + τ₀<br>
+        q*: P(q*) = MSC(q*) &nbsp;→&nbsp; τ* = MSC(q*) − AC(q*) &nbsp;·&nbsp; ΔW = ∫<sub>q*</sub><sup>q₀</sup>(MSC − P) dq
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ANALYSIS ================= -->
+<section aria-labelledby="anH">
+  <div class="sec-head">
+    <div>
+      <div class="eyebrow">Traffic flow theory · filtered</div>
+      <h2 id="anH">Flow analysis</h2>
+    </div>
+    <p class="sub">These filters apply to every chart and table below. Distribution charts use the analysis window ending at the decision time.</p>
+  </div>
+  <div class="filters" role="group" aria-label="Analysis filters">
+    <div class="grp"><span class="ctl-label">Lanes</span><span id="laneToggles" class="grp"></span></div>
+    <div class="grp"><span class="ctl-label">Vehicle class</span><span id="classToggles" class="grp"></span></div>
+    <div class="grp"><span class="ctl-label">Model</span>
+      <select id="modelSel" aria-label="Speed–density model">
+        <option value="auto">Best fit (R²)</option>
+        <option value="greenshields">Greenshields (linear)</option>
+        <option value="underwood">Underwood (exponential)</option>
+        <option value="drake">Drake (bell-shaped)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-head"><h3>Flow rate per lane</h3><span class="note">veh/h/ln · 5-min</span></div>
+      <div class="legend lane-legend"></div>
+      <div class="chart" id="chFlow"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Space-mean speed per lane</h3><span class="note">km/h · harmonic mean of spot speeds</span></div>
+      <div class="legend lane-legend"></div>
+      <div class="chart" id="chSpeed"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h3>Speed contour · lane × time</h3><span class="note">Darker cells are slower. Blank cells had no crossings.</span></div>
+    <div class="legend" id="heatLegend"></div>
+    <div class="chart" id="chHeat"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h3>Fundamental diagram</h3><span class="note" id="fdNote">—</span></div>
+    <div class="legend" id="fdLegend"></div>
+    <div class="grid-3" id="fdGrid">
+      <div class="chart" id="chVK"></div>
+      <div class="chart" id="chQK"></div>
+      <div class="chart" id="chVQ"></div>
+    </div>
+    <div class="stats" id="fdStats"></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-head"><h3>Time-headway distribution</h3><span class="note" id="hwNote">—</span></div>
+      <div class="legend" id="hwLegend"></div>
+      <div class="chart" id="chHw"></div>
+      <div class="stats" id="hwStats"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Spot-speed distribution by class</h3><span class="note" id="spNote">—</span></div>
+      <div class="legend class-legend"></div>
+      <div class="chart" id="chSp"></div>
+      <div class="stats" id="spStats"></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-head"><h3>Lane use and fleet mix</h3><span class="note">Bars: class mix within each lane · right: lane share of all traffic</span></div>
+      <div class="legend class-legend"></div>
+      <div class="chart" id="chLane"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Toll revenue and PCE by class</h3><span class="note">Window, at the tariffs below</span></div>
+      <div class="tbl-wrap" style="max-height:none"><table id="revTbl"></table></div>
+      <p class="sub" style="margin-top:8px;font-size:.78rem">Tariff multiples of the car tariff: motorcycle 0.5, LCV 1.5, bus 2.0, HGV 3.0. PCE: car/LCV 1.0, bus/HGV 2.0, motorcycle 0.5.</p>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-head"><h3>Speed violations</h3><span class="note" id="violNote">—</span></div>
+      <div class="tbl-wrap"><table id="violTbl"></table></div>
+      <p class="sub" style="margin-top:8px;font-size:.78rem">Plates are masked by default. Enforcement use needs a lawful basis and a retention limit.</p>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Frequent crossers</h3><span class="note">Same plate ≥ 3 times in the dataset</span></div>
+      <div class="tbl-wrap"><table id="freqTbl"></table></div>
+      <p class="sub" style="margin-top:8px;font-size:.78rem">Candidates for fleet accounts or frequent-user discounts. Shuttle buses show a regular crossing interval.</p>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-head"><h3>Data quality</h3><span class="note">Whole dataset</span></div>
+      <div class="dq" id="dq"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>CSV format</h3><span class="note">One row per crossing</span></div>
+      <p class="sub" style="font-size:.82rem">Columns are matched by name. Headway is recomputed from timestamps when it is missing. Vehicle types map to car, LCV/van, bus, HGV/truck, motorcycle.</p>
+      <pre class="formula" id="csvSample" style="white-space:pre"></pre>
+      <button class="btn" id="copyCsv" type="button" style="margin-top:8px">Copy example</button>
+    </div>
+  </div>
+
+  <details class="card">
+    <summary>5-minute aggregates as a table</summary>
+    <div class="tbl-wrap" style="margin-top:10px"><table id="aggTbl"></table></div>
+  </details>
+</section>
+
+<footer>
+  Sample data is simulated: a demand profile with stochastic breakdown at the bottleneck, a point-queue with 10% capacity drop, a lane-1 blockage from 12:50 to 13:25, night-time speeding, a short-headway period in the evening peak and a dirty ANPR lens on lane 2 after 20:00. Density uses k = q / v̄ₛ. LOS thresholds follow HCM basic freeway segments converted to pc/km/ln (7, 11, 16, 22, 28).
+</footer>
+</main>
+
+<div class="tip" id="tip" hidden></div>
+
+<script>
+"use strict";
+/* =========================================================
+   Constants
+   ========================================================= */
+const CLASSES = ["Car","LCV","Bus","HGV","Motorcycle"];
+const CVAR = ["--c-car","--c-lcv","--c-bus","--c-hgv","--c-moto"];
+const PCE = [1,1,2,2,0.5];
+const LIMIT = [120,120,100,90,120];
+const TARIFF_MULT = [1,1.5,2,3,0.5];
+const BIN = 300;           // seconds per aggregation interval
+const F = 14;              // fields per (bin, lane)
+const f = {n:0,pce:1,inv:2,sv:3,nh:4,nhl:5,nsp:6,nun:7,c0:8};
+const $ = s => document.querySelector(s);
+const SVGNS = "http://www.w3.org/2000/svg";
+
+/* =========================================================
+   Random helpers (seeded)
+   ========================================================= */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+
+/* =========================================================
+   Sample-day generator
+   ========================================================= */
+function generateSample(){
+  const R = mulberry32(20260924);
+  const N = () => {let u=0; while(!u) u=R(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*R());};
+  const expo = m => -Math.log(1-R())*m;
+  const g = (x,m,s) => Math.exp(-0.5*((x-m)/s)**2);
+  const nL = 3, CAP = 2000, M = 1440, DAY = 86400;
+  const L = "ABCDEFGHJKLMNPRSTUVWXYZ";
+  const plateRnd = () => L[R()*23|0]+L[R()*23|0]+" "+(100+(R()*900|0))+" "+L[R()*23|0]+L[R()*23|0];
+  const shuttles = Array.from({length:10},plateRnd), fleet = Array.from({length:60},plateRnd);
+
+  // --- macroscopic state per minute ---
+  const qL = [...Array(nL)].map(()=>new Float64Array(M));
+  const vL = [...Array(nL)].map(()=>new Float64Array(M));
+  const cong = new Uint8Array(M);
+  let Q = 0, broke = false, noise = 0;
+  for(let m=0;m<M;m++){
+    const h = m/60;
+    noise = 0.9*noise + 0.1*N()*0.25;
+    const D = (250 + 3000*g(h,12.8,3.6) + 4700*g(h,8.05,0.75) + 3900*g(h,17.6,1.1))*(1+0.06*noise);
+    const incident = m>=770 && m<805;           // 12:50–13:25, lane 1 blocked
+    const open = incident ? [0,1,1] : [1,1,1];
+    const nOpen = open.reduce((a,b)=>a+b,0);
+    const cap = CAP*nOpen*(incident?0.8:1);
+    const capB = cap*0.9;
+    if(!broke && D > cap*(0.95+0.05*R())) broke = true;
+    let qT;
+    if(broke){
+      Q += (D-capB)/60;
+      if(Q<=0){Q=0;broke=false;}
+    }
+    const congested = broke && Q>0;
+    cong[m] = congested?1:0;
+    if(congested){
+      const s = Math.min(1,Q/600), osc = 0.5+0.5*Math.sin(2*Math.PI*m/7);
+      qT = capB*(1-0.32*s*osc);
+    } else qT = D;
+    const x = qT/(nL*CAP);
+    let sh = [0.45-0.15*x, 0.35, 0.20+0.15*x].map((v,i)=>v*open[i]);
+    const ss = sh.reduce((a,b)=>a+b,0); sh = sh.map(v=>v/ss);
+    const night = (m>=30 && m<270) ? 1 : 0;
+    for(let l=0;l<nL;l++){
+      const q = qT*sh[l]; qL[l][m] = q;
+      let v;
+      if(congested){ const k = 125 - q/20; v = Math.max(6, q/Math.max(k,20)); }
+      else {
+        const xl = q/CAP;
+        v = 116 - 34*xl**3 + [-9,0,8][l] + night*11;
+        if(m>=765 && m<812 && l===1) v -= 18;      // rubbernecking beside the blockage
+      }
+      vL[l][m] = v;
+    }
+  }
+
+  // --- microscopic streams per lane ---
+  const recs = [];
+  for(let l=0;l<nL;l++){
+    let t = 0, tPrev = NaN, vPrev = NaN;
+    while(t < DAY){
+      const m = Math.min(M-1, t/60|0);
+      const q = qL[l][m];
+      if(q < 4){ t = (m+1)*60; continue; }
+      const mean = 3600/q;
+      const tailgate = m>=1010 && m<1120;
+      let tau = cong[m] ? 1.3 : (tailgate ? 0.5 : 0.95);
+      tau = Math.min(tau, mean*0.6);
+      let hwy = tau + expo(mean - tau);
+      if(tailgate && R()<0.14) hwy = 0.45 + 0.55*R();
+      t += hwy;
+      if(t >= DAY) break;
+      const mm = Math.min(M-1, t/60|0), h = t/3600;
+      // class
+      const hgv = 0.08 + 0.15*g(h,3,2.2) + 0.04*g(h,11.5,2);
+      const split = (mm>=605 && mm<665) ? [0.70,0.18,0.12] : [0.80,0.18,0.02];
+      const share = [0.45,0.35,0.20][l];
+      const pH = Math.min(0.6, hgv*split[l]/share);
+      const pL = 0.10 + 0.03*g(h,11,3), pB = 0.011*(l===2?0.2:1), pM = 0.03*g(h,15,4)*(l===0?0.5:1.2);
+      const u = R();
+      const c = u<pH ? 3 : u<pH+pL ? 1 : u<pH+pL+pB ? 2 : u<pH+pL+pB+pM ? 4 : 0;
+      // speed
+      const night = (mm>=30 && mm<270);
+      const sd = cong[mm] ? 5 : (night ? 15 : 10);
+      let v = vL[l][mm] + N()*sd;
+      if(c===3) v = Math.min(v-7, 87+N()*2.5);
+      else if(c===2) v = Math.min(v-3, 99+N()*4);
+      else if(c===1) v -= 2;
+      else if(c===4) v += 4;
+      const gap = t - tPrev;
+      if(gap < 2 && !isNaN(vPrev)) v = 0.55*v + 0.45*vPrev;   // car-following
+      v = Math.max(3, v);
+      // plate
+      let plate;
+      if(c===2 && R()<0.55) plate = shuttles[R()*shuttles.length|0];
+      else if(c===1 && R()<0.12) plate = fleet[R()*fleet.length|0];
+      else plate = plateRnd();
+      const unreadP = (l===1 && mm>=1200 && mm<1270) ? 0.09 : 0.008;
+      if(R()<unreadP) plate = "";
+      if(R()<0.0002) v = 240 + R()*60;                        // radar glitch
+      recs.push([t, l+1, c, v, isNaN(tPrev)?NaN:gap, plate]);
+      if(R()<0.0012) recs.push([t+0.25, l+1, c, v, 0.25, plate]); // double read
+      tPrev = t; vPrev = v;
+    }
+  }
+  const d = new Date(2026,8,24,0,0,0);
+  return buildDataset(recs, d.getTime(), nL, "Simulated weekday · "+recs.length.toLocaleString()+" crossings");
+}
+
+/* =========================================================
+   Dataset (columnar)
+   ========================================================= */
+function buildDataset(recs, dayStart, nL, label){
+  recs.sort((a,b)=>a[0]-b[0]);
+  const n = recs.length;
+  const D = {n, nL, dayStart, label,
+    t:new Float64Array(n), lane:new Uint8Array(n), cls:new Uint8Array(n), v:new Float32Array(n), hw:new Float32Array(n), plate:new Array(n), flag:new Uint8Array(n)};
+  for(let i=0;i<n;i++){const r=recs[i]; D.t[i]=r[0]; D.lane[i]=r[1]; D.cls[i]=r[2]; D.v[i]=r[3]; D.hw[i]=r[4]; D.plate[i]=r[5];}
+  // quality flags: 1 duplicate read, 2 implausible speed, 3 implausible headway
+  const last = new Map();
+  for(let i=0;i<n;i++){
+    const p = D.plate[i];
+    if(p){ const prev = last.get(p); if(prev && D.lane[prev[1]]===D.lane[i] && D.t[i]-prev[0] < 3){D.flag[i]=1;} last.set(p,[D.t[i],i]); }
+    if(!D.flag[i] && (D.v[i] > 200 || D.v[i] < 1)) D.flag[i]=2;
+    if(!D.flag[i] && D.hw[i] < 0.3) D.flag[i]=3;
+  }
+  D.span = n ? D.t[n-1] : 86400;
+  D.nBins = Math.max(1, Math.ceil((D.span+1)/BIN));
+  return D;
+}
+
+function aggregate(D, laneOk, clsOk){
+  const A = new Float64Array(D.nBins*D.nL*F);
+  for(let i=0;i<D.n;i++){
+    if(D.flag[i]) continue;
+    const c = D.cls[i], l = D.lane[i]-1;
+    if(clsOk && !clsOk[c]) continue;
+    if(laneOk && !laneOk[l]) continue;
+    const b = Math.min(D.nBins-1, D.t[i]/BIN|0), o = (b*D.nL+l)*F, v = D.v[i];
+    A[o]++; A[o+1]+=PCE[c]; A[o+2]+=1/v; A[o+3]+=v;
+    const hw = D.hw[i];
+    if(hw===hw && hw>0){ A[o+4]++; if(hw<1 && v>60) A[o+5]++; }
+    if(v > LIMIT[c]+20) A[o+6]++;
+    if(!D.plate[i]) A[o+7]++;
+    A[o+8+c]++;
+  }
+  return A;
+}
+// sum a field over bins [b0,b1] and a lane list
+function sumF(A, D, b0, b1, lanes, fld){let s=0; for(let b=Math.max(0,b0);b<=b1;b++) for(const l of lanes) s+=A[(b*D.nL+l)*F+fld]; return s;}
+function laneBin(A, D, b, l){
+  const o=(b*D.nL+l)*F, n=A[o];
+  if(!n) return null;
+  const q=n*3600/BIN, vs=n/A[o+2];
+  return {n, q, vs, k:q/vs, kpc:A[o+1]*3600/BIN/vs};
+}
+function windowState(A, D, b0, b1){
+  const lanes=[...Array(D.nL).keys()], bins=b1-Math.max(0,b0)+1;
+  const n=sumF(A,D,b0,b1,lanes,f.n);
+  if(!n) return null;
+  const inv=sumF(A,D,b0,b1,lanes,f.inv), pce=sumF(A,D,b0,b1,lanes,f.pce);
+  const hrs = bins*BIN/3600, vs=n/inv, Q=n/hrs;
+  const nh=sumF(A,D,b0,b1,lanes,f.nh);
+  return {n, Q, qLn:Q/D.nL, vs, k:Q/D.nL/vs, kpc:pce/hrs/D.nL/vs,
+    hgv:sumF(A,D,b0,b1,lanes,f.c0+3)/n, short:nh?sumF(A,D,b0,b1,lanes,f.nhl)/nh:0,
+    speeding:sumF(A,D,b0,b1,lanes,f.nsp)/n, unread:sumF(A,D,b0,b1,lanes,f.nun)/n,
+    laneN:lanes.map(l=>sumF(A,D,b0,b1,[l],f.n)),
+    laneV:lanes.map(l=>{const m=sumF(A,D,b0,b1,[l],f.n);return m?m/sumF(A,D,b0,b1,[l],f.inv):NaN;}),
+    laneHgv:lanes.map(l=>sumF(A,D,b0,b1,[l],f.c0+3)),
+    laneUn:lanes.map(l=>sumF(A,D,b0,b1,[l],f.nun))};
+}
+
+/* =========================================================
+   Speed–density models
+   ========================================================= */
+function ols(xs, ys){
+  const n=xs.length; let sx=0,sy=0,sxx=0,sxy=0;
+  for(let i=0;i<n;i++){sx+=xs[i];sy+=ys[i];sxx+=xs[i]*xs[i];sxy+=xs[i]*ys[i];}
+  const b=(n*sxy-sx*sy)/(n*sxx-sx*sx), a=(sy-b*sx)/n; return {a,b};
+}
+function fitModels(pts){
+  const K=pts.map(p=>p.k), V=pts.map(p=>p.vs);
+  const r2 = fn => {const mv=V.reduce((a,b)=>a+b,0)/V.length; let ss=0,st=0; for(let i=0;i<V.length;i++){ss+=(V[i]-fn(K[i]))**2; st+=(V[i]-mv)**2;} return 1-ss/st;};
+  const out={};
+  {const {a,b}=ols(K,V); const vf=a, kj=-a/b;
+   out.greenshields={name:"Greenshields", vf, kj, kc:kj/2, v:k=>Math.max(0,vf*(1-k/kj)), kmax:kj, par:`v_f ${vf.toFixed(1)} km/h · k_j ${kj.toFixed(1)} veh/km`};}
+  {const {a,b}=ols(K,V.map(Math.log)); const vf=Math.exp(a), ko=-1/b;
+   out.underwood={name:"Underwood", vf, kc:ko, v:k=>vf*Math.exp(-k/ko), kmax:ko*5, par:`v_f ${vf.toFixed(1)} km/h · k_o ${ko.toFixed(1)} veh/km`};}
+  {const {a,b}=ols(K.map(k=>k*k),V.map(Math.log)); const vf=Math.exp(a), kc=Math.sqrt(-1/(2*b));
+   out.drake={name:"Drake", vf, kc, v:k=>vf*Math.exp(-0.5*(k/kc)**2), kmax:kc*4, par:`v_f ${vf.toFixed(1)} km/h · k_c ${kc.toFixed(1)} veh/km`};}
+  for(const key in out){const M=out[key]; M.key=key; M.r2=r2(M.v); M.qmax=M.kc*M.v(M.kc);}
+  return out;
+}
+// uncongested branch: speed at flow q (bisection on k in [0,kc])
+function vAtQ(M,q){
+  if(q<=0) return M.v(0);
+  if(q>=M.qmax) return M.v(M.kc);
+  let lo=0, hi=M.kc;
+  for(let i=0;i<50;i++){const mid=(lo+hi)/2; if(mid*M.v(mid)<q) lo=mid; else hi=mid;}
+  return M.v((lo+hi)/2);
+}
+
+/* =========================================================
+   Decision rules
+   ========================================================= */
+const RULES = [
+  {id:"queue", sev:"critical", title:"Queue at the gantry"},
+  {id:"lane", sev:"critical", title:"Lane blockage suspected"},
+  {id:"risk", sev:"serious", title:"Breakdown risk"},
+  {id:"short", sev:"warning", title:"Short headways"},
+  {id:"speed", sev:"warning", title:"Excessive speeding"},
+  {id:"hgv", sev:"info", title:"HGVs in the left lane"},
+  {id:"anpr", sev:"info", title:"ANPR read rate low"},
+];
+function evalRules(S, prev, ctx){
+  const out=[];
+  if(!S || S.n<10) return out;
+  const nL=ctx.nL;
+  if(S.vs<60) out.push({id:"queue", why:`Space-mean speed ${S.vs.toFixed(0)} km/h, density ${S.kpc.toFixed(1)} pc/km/ln.`,
+    act:"<b>Queue warning</b> on upstream VMS, <b>speed limit 80 → 60</b>, activate <b>ramp metering</b> at J41 on-ramp.",
+    vms:["QUEUE AHEAD","SLOW DOWN","60"]});
+  // lane blockage: a lane carrying far below its neighbours' flow
+  const others=l=>{const o=S.laneN.filter((_,i)=>i!==l); return o.reduce((a,b)=>a+b,0)/o.length;};
+  for(let l=0;l<nL;l++){
+    const ref=others(l);
+    if(ref>=25 && S.laneN[l] < 0.2*ref){
+      out.push({id:"lane", lane:l, why:`Lane ${l+1} carried ${S.laneN[l]} vehicles vs ${ref.toFixed(0)} on average in the other lanes.`,
+        act:`Set <b>red X on lane ${l+1}</b>, dispatch traffic patrol, check CCTV at km 42–44.`, vms:[`LANE ${l+1} CLOSED`,"MERGE LEFT","80"]});
+      break;
+    }
+  }
+  const dv = prev ? S.vs - prev.vs : 0;
+  if(S.vs>=60 && (S.qLn > 0.85*ctx.qcap || (dv < -10 && S.qLn > 0.6*ctx.qcap)))
+    out.push({id:"risk", why:`Flow ${S.qLn.toFixed(0)} veh/h/ln is ${(100*S.qLn/ctx.qcap).toFixed(0)}% of estimated capacity; speed change ${dv>=0?"+":""}${dv.toFixed(0)} km/h over 15 min.`,
+      act:"Harmonise with <b>variable speed limit 100</b> and pre-activate ramp metering.", vms:["HEAVY TRAFFIC","SPEED LIMIT","100"]});
+  if(S.short>0.12) out.push({id:"short", why:`${(100*S.short).toFixed(1)}% of vehicles above 60 km/h follow at under 1.0 s.`,
+    act:"Show <b>KEEP YOUR DISTANCE</b> (2-second rule) and flag the period for rear-end risk.", vms:["KEEP","YOUR DISTANCE","2 SEC"]});
+  if(S.speeding>0.05) out.push({id:"speed", why:`${(100*S.speeding).toFixed(1)}% exceed their class limit by more than 20 km/h.`,
+    act:"Show <b>SPEED CHECK</b> and schedule mobile enforcement.", vms:["SPEED","CHECK","AHEAD"]});
+  const top=nL-1;
+  if(S.laneN[top]>=10 && S.laneHgv[top]>=3 && S.laneHgv[top]/S.laneN[top]>0.04)
+    out.push({id:"hgv", why:`HGVs are ${(100*S.laneHgv[top]/S.laneN[top]).toFixed(1)}% of lane ${top+1} traffic.`,
+      act:"Show <b>HGV NO OVERTAKING</b> for the next 10 km.", vms:["HGV","NO OVERTAKING","10 KM"]});
+  for(let l=0;l<nL;l++) if(S.laneN[l]>=20 && S.laneUn[l]/S.laneN[l]>0.04){
+    out.push({id:"anpr", lane:l, why:`Lane ${l+1} plate read rate is ${(100-100*S.laneUn[l]/S.laneN[l]).toFixed(1)}%. Unread crossings need manual billing.`,
+      act:`Open a <b>maintenance ticket</b> for the lane ${l+1} camera (lens or IR illuminator).`}); break;}
+  return out;
+}
+
+/* =========================================================
+   App state
+   ========================================================= */
+const st = {D:null, Aall:null, Af:null, cursor:96, win:12, laneOk:[], clsOk:[true,true,true,true,true], model:"auto",
+  fits:null, M:null, qcap:1900, timeline:null, playing:null, hoverBin:null};
+
+function loadDataset(D){
+  st.D=D;
+  st.laneOk=Array(D.nL).fill(true);
+  st.Aall=aggregate(D);
+  // capacity estimate: 97th percentile of 5-min lane flows
+  const qs=[]; for(let b=0;b<D.nBins;b++) for(let l=0;l<D.nL;l++){const x=laneBin(st.Aall,D,b,l); if(x && x.n>=5) qs.push(x.q);}
+  qs.sort((a,b)=>a-b); st.qcap=qs.length?qs[Math.floor(qs.length*0.97)]:1900;
+  // timeline
+  st.timeline=[];
+  let prev=null;
+  for(let b=0;b<D.nBins;b++){
+    const S=windowState(st.Aall,D,b-2,b), P=b>=5?windowState(st.Aall,D,b-5,b-3):null;
+    st.timeline.push(evalRules(S,P,{nL:D.nL,qcap:st.qcap}).map(r=>r.id));
+  }
+  $("#cursor").max=D.nBins-1;
+  if(st.cursor>D.nBins-1) st.cursor=Math.min(D.nBins-1, 96);
+  $("#cursor").value=st.cursor;
+  const dt=new Date(D.dayStart);
+  $("#dateLabel").textContent=dt.toLocaleDateString(undefined,{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+  $("#dsLabel").textContent=D.label;
+  buildToggles();
+  refilter();
+}
+function refilter(){
+  st.Af=aggregate(st.D, st.laneOk, st.clsOk);
+  const pts=fdPoints(st.Af);
+  st.fdPts=pts;
+  st.fits=pts.length>10?fitModels(pts):null;
+  pickModel();
+  renderAll();
+}
+function pickModel(){
+  if(!st.fits){st.M=null;return;}
+  if(st.model==="auto"){let best=null; for(const k in st.fits) if(!best||st.fits[k].r2>best.r2) best=st.fits[k]; st.M=best;}
+  else st.M=st.fits[st.model];
+}
+function fdPoints(A){
+  const D=st.D, pts=[];
+  for(let b=0;b<D.nBins;b++) for(let l=0;l<D.nL;l++){ if(!st.laneOk[l]) continue; const x=laneBin(A,D,b,l); if(x && x.n>=5) pts.push({...x,b,l}); }
+  return pts;
+}
+const winRange = () => st.win ? [Math.max(0,st.cursor-st.win+1), st.cursor] : [0, st.D.nBins-1];
+function fmtBin(b){const s=b*BIN; if(!st.D||st.D.nBins<=288){return String(Math.floor(s/3600)).padStart(2,"0")+":"+String(Math.floor(s%3600/60)).padStart(2,"0");} const d=Math.floor(s/86400), h=Math.floor(s%86400/3600), m=Math.floor(s%3600/60); return (d?`D${d+1} `:"")+String(h).padStart(2,"0")+":"+String(m).padStart(2,"0");}
+function fmtT(t){const h=Math.floor(t%86400/3600), m=Math.floor(t%3600/60), s=Math.floor(t%60); return [h,m,s].map(x=>String(x).padStart(2,"0")).join(":");}
+function idxAt(t){let lo=0,hi=st.D.n; while(lo<hi){const m=(lo+hi)>>1; if(st.D.t[m]<t) lo=m+1; else hi=m;} return lo;}
+const cssv = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const laneVar = (l,nL) => nL===1 ? "var(--l2)" : nL===2 ? `var(--l${l?3:1})` : nL===3 ? `var(--l${l+1})` : `color-mix(in oklab, var(--l1), var(--l3) ${Math.round(100*l/(nL-1))}%)`;
+function mask(p){ if(!p) return "unread"; return p.replace(/[0-9](?=[0-9])/g,"•").replace(/^([A-Z])[A-Z]/,"$1•"); }
+
+/* =========================================================
+   SVG helpers
+   ========================================================= */
+function el(tag, attrs, parent){const e=document.createElementNS(SVGNS,tag); for(const k in attrs){ if(k==="text") e.textContent=attrs[k]; else if(k==="style") e.setAttribute("style",attrs[k]); else e.setAttribute(k,attrs[k]); } if(parent) parent.appendChild(e); return e;}
+function newSvg(host, h){
+  host.innerHTML="";
+  const w=Math.max(280, host.clientWidth||600);
+  const s=el("svg",{viewBox:`0 0 ${w} ${h}`, role:"img"},host);
+  return {s,w,h};
+}
+const lin=(d0,d1,r0,r1)=>{const k=(r1-r0)/((d1-d0)||1); const f=x=>r0+(x-d0)*k; f.inv=y=>d0+(y-r0)/k; return f;};
+function ticks(min,max,n=5){
+  const span=max-min||1, step0=span/n, p=Math.pow(10,Math.floor(Math.log10(step0))), e=step0/p;
+  const step=(e>=5?10:e>=2?5:e>=1?2:1)*p; const out=[];
+  for(let v=Math.ceil(min/step)*step; v<=max+1e-9; v+=step) out.push(+v.toFixed(10));
+  return out;
+}
+function yAxis(g, y, tk, x0, x1, fmt=String){
+  for(const t of tk){ el("line",{x1:x0,x2:x1,y1:y(t),y2:y(t),class:"gridl"},g); el("text",{x:x0-6,y:y(t)+3.5,"text-anchor":"end",text:fmt(t)},g); }
+}
+function xAxis(g, x, tk, y0, fmt=String){
+  el("line",{x1:x(tk[0]),x2:x(tk[tk.length-1]),y1:y0,y2:y0,class:"axisl"},g);
+  for(const t of tk){ el("line",{x1:x(t),x2:x(t),y1:y0,y2:y0+4,class:"axisl"},g); el("text",{x:x(t),y:y0+16,"text-anchor":"middle",text:fmt(t)},g); }
+}
+function pathD(xs, ys){let d="",pen=false; for(let i=0;i<xs.length;i++){const yv=ys[i]; if(yv==null||!isFinite(yv)){pen=false;continue;} d+=(pen?"L":"M")+xs[i].toFixed(1)+","+yv.toFixed(1); pen=true;} return d;}
+
+/* tooltip */
+const tip=$("#tip");
+function showTip(ev, title, rows){
+  tip.replaceChildren();
+  const h=document.createElement("div"); h.className="h"; h.textContent=title; tip.appendChild(h);
+  for(const r of rows){
+    const d=document.createElement("div"); d.className="r";
+    const k=document.createElement("i"); k.className="k"; if(r.color) k.style.background=r.color; d.appendChild(k);
+    const b=document.createElement("b"); b.textContent=r.value; d.appendChild(b);
+    const s=document.createElement("span"); s.textContent=r.label; d.appendChild(s);
+    tip.appendChild(d);
+  }
+  tip.hidden=false;
+  const pad=14, tw=tip.offsetWidth, th=tip.offsetHeight;
+  let x=ev.clientX+pad, y=ev.clientY+pad;
+  if(x+tw>innerWidth-8) x=ev.clientX-tw-pad;
+  if(y+th>innerHeight-8) y=ev.clientY-th-pad;
+  tip.style.left=Math.max(8,x)+"px"; tip.style.top=Math.max(8,y)+"px";
+}
+const hideTip=()=>{tip.hidden=true;};
+
+/* =========================================================
+   Rendering: decision support
+   ========================================================= */
+function losOf(kpc, vs){
+  if(vs<60) return "F";
+  const th=[7,11,16,22,28]; const L="ABCDE";
+  for(let i=0;i<th.length;i++) if(kpc<=th[i]) return L[i];
+  return "F";
+}
+const losSev = L => ({A:"good",B:"good",C:"good",D:"warning",E:"serious",F:"critical"})[L];
+const ICON = {
+  critical:'<svg viewBox="0 0 12 12"><path d="M6 1 11 10H1Z" fill="currentColor"/></svg>',
+  serious:'<svg viewBox="0 0 12 12"><rect x="1.5" y="1.5" width="9" height="9" transform="rotate(45 6 6)" fill="currentColor"/></svg>',
+  warning:'<svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="5" y="3" width="2" height="4" fill="currentColor"/></svg>',
+  info:'<svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+  good:'<svg viewBox="0 0 12 12"><path d="M2 6.5 5 9 10 3" fill="none" stroke="currentColor" stroke-width="2"/></svg>'
+};
+const SEVLBL={critical:"Critical",serious:"Serious",warning:"Warning",info:"Advisory",good:"Normal"};
+function chip(sev){const s=document.createElement("span"); s.className="chip"; s.dataset.sev=sev; s.innerHTML=ICON[sev]; s.appendChild(document.createTextNode(SEVLBL[sev])); return s;}
+
+function renderDSS(){
+  const D=st.D, b=st.cursor;
+  $("#clock").textContent=fmtBin(b+1);
+  const S=windowState(st.Aall,D,b-2,b), P=windowState(st.Aall,D,b-5,b-3);
+  const box=$("#losBox"), recs=$("#recs"), kp=$("#kpis");
+  recs.replaceChildren(); kp.replaceChildren();
+  if(!S){ $("#losLetter").textContent="–"; $("#regimeText").textContent="No crossings in the last 15 minutes"; $("#regimeSub").textContent=""; renderVMS([]); return; }
+  const L=losOf(S.kpc,S.vs);
+  $("#losLetter").textContent=L; box.dataset.sev=losSev(L);
+  const regime = S.vs<60 ? "Congested (queue passing the gantry)" : S.qLn>0.85*st.qcap ? "Near capacity" : S.qLn>0.5*st.qcap ? "Stable flow" : "Free flow";
+  $("#regimeText").textContent=regime;
+  $("#regimeSub").textContent=`${fmtBin(Math.max(0,b-2))}–${fmtBin(b+1)} · ${S.n.toLocaleString()} crossings · capacity estimate ${st.qcap.toFixed(0)} veh/h/ln (97th percentile of 5-min lane flows)`;
+  const kpis=[
+    ["Flow",S.Q.toFixed(0),"veh/h",P?S.Q-P.Q:null,0,"neutral"],
+    ["Flow per lane",S.qLn.toFixed(0),"veh/h/ln",P?S.qLn-P.qLn:null,0,"neutral"],
+    ["Space-mean speed",S.vs.toFixed(1),"km/h",P?S.vs-P.vs:null,1,"up"],
+    ["Density",S.kpc.toFixed(1),"pc/km/ln",P?S.kpc-P.kpc:null,1,"down"],
+    ["HGV share",(100*S.hgv).toFixed(1),"%",P?100*(S.hgv-P.hgv):null,1,"neutral"],
+    ["Headway < 1 s",(100*S.short).toFixed(1),"%",P?100*(S.short-P.short):null,1,"down"],
+  ];
+  for(const [lab,val,unit,dl,dec,good] of kpis){
+    const d=document.createElement("div"); d.className="kpi";
+    const a=document.createElement("span"); a.className="eyebrow"; a.textContent=lab;
+    const v=document.createElement("span"); v.className="v"; v.textContent=val; const u=document.createElement("small"); u.textContent=unit; v.appendChild(u);
+    const dd=document.createElement("span"); dd.className="d";
+    if(dl!=null){ const s=dl>=0?"▲ +":"▼ −"; dd.textContent=`${s}${Math.abs(dl).toFixed(dec)} vs prior 15 min`;
+      if(good!=="neutral" && Math.abs(dl)>(dec?0.5:20)){ const better = good==="up" ? dl>0 : dl<0; dd.classList.add(better?"up":"down"); } }
+    d.append(a,v,dd); kp.appendChild(d);
+  }
+  const act=evalRules(S,P,{nL:D.nL,qcap:st.qcap});
+  const order={critical:0,serious:1,warning:2,info:3};
+  act.sort((a,b)=>order[RULES.find(r=>r.id===a.id).sev]-order[RULES.find(r=>r.id===b.id).sev]);
+  // pricing recommendation appended as an advisory
+  const econ=st.econ;
+  if(!act.length){
+    const r=document.createElement("div"); r.className="rec";
+    const t=document.createElement("div"); t.className="t"; t.textContent="No intervention needed";
+    const w=document.createElement("div"); w.className="why"; w.textContent="All indicators are inside their thresholds. Keep the default VMS message and monitor.";
+    r.append(chip("good"),t,w); recs.appendChild(r);
+  }
+  for(const a of act){
+    const R=RULES.find(r=>r.id===a.id);
+    const r=document.createElement("div"); r.className="rec";
+    const t=document.createElement("div"); t.className="t"; t.textContent=R.title;
+    const w=document.createElement("div"); w.className="why"; w.textContent=a.why;
+    const x=document.createElement("div"); x.className="act"; x.innerHTML=a.act;   // static rule text only
+    r.append(chip(R.sev),t,w,x); recs.appendChild(r);
+  }
+  if(econ && econ.rec){
+    const r=document.createElement("div"); r.className="rec";
+    const t=document.createElement("div"); t.className="t"; t.textContent="Toll setting";
+    const w=document.createElement("div"); w.className="why"; w.textContent=econ.rec;
+    r.append(chip("info"),t,w); recs.appendChild(r);
+  }
+  renderVMS(act);
+  // lane control signals
+  const lcs=[]; for(let l=D.nL-1;l>=0;l--){ const blocked=act.find(a=>a.id==="lane"&&a.lane===l); const q=act.find(a=>a.id==="queue"); const rk=act.find(a=>a.id==="risk"); lcs.push(blocked?"✕":q?"60":rk?"100":"↓"); }
+  $("#lcs").textContent=lcs.join("  ");
+}
+function renderVMS(act){
+  const v=$("#vms"); v.replaceChildren();
+  const m=act.find(a=>a.vms);
+  const lines=m?m.vms:["A-7 NORTH","DRIVE SAFELY","km 42"];
+  for(const s of lines){const d=document.createElement("div"); d.className="line"+(m?"":" dim"); d.textContent=s; v.appendChild(d);}
+  $("#vmsCap").textContent=m?`Triggered by: ${RULES.find(r=>r.id===m.id).title}`:"Default message (no active rule)";
+}
+
+function renderTimeline(){
+  const host=$("#chTimeline"), D=st.D;
+  const rowH=20, top=6, left=158, bottom=24;
+  const {s,w}=newSvg(host, top+RULES.length*rowH+bottom);
+  const x=lin(0,D.nBins,left,w-8);
+  const g=el("g",{},s);
+  const sevVar={critical:"var(--critical)",serious:"var(--serious)",warning:"var(--warning)",info:"var(--muted)"};
+  RULES.forEach((R,i)=>{
+    const y=top+i*rowH;
+    el("rect",{x:left,y:y+3,width:w-8-left,height:rowH-6,rx:3,style:"fill:var(--surface-2)"},g);
+    el("text",{x:left-8,y:y+rowH/2+3.5,"text-anchor":"end",class:"ttl",text:R.title},g);
+    // merge runs
+    let b=0;
+    while(b<D.nBins){
+      if(st.timeline[b].includes(R.id)){
+        let e=b; while(e+1<D.nBins && st.timeline[e+1].includes(R.id)) e++;
+        const r=el("rect",{x:x(b),y:y+3,width:Math.max(2,x(e+1)-x(b)),height:rowH-6,rx:2,style:`fill:${sevVar[R.sev]};cursor:pointer`,tabindex:0},g);
+        const b0=b,e0=e;
+        const show=ev=>showTip(ev,R.title,[{label:"active",value:`${fmtBin(Math.max(0,b0-2))}–${fmtBin(e0+1)}`,color:sevVar[R.sev]},{label:"minutes",value:String((e0-b0+1)*5)}]);
+        r.addEventListener("pointermove",show); r.addEventListener("pointerleave",hideTip);
+        r.addEventListener("focus",ev=>{const bb=r.getBoundingClientRect(); show({clientX:bb.left,clientY:bb.bottom});}); r.addEventListener("blur",hideTip);
+        const go=()=>setCursor(b0);
+        r.addEventListener("click",go); r.addEventListener("keydown",ev=>{if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();go();}});
+        b=e+1;
+      } else b++;
+    }
+  });
+  const tk=[]; for(let b=0;b<=D.nBins;b+=36) tk.push(b);
+  xAxis(g,x,tk,top+RULES.length*rowH+2,fmtBin);
+  el("line",{x1:x(st.cursor+0.5),x2:x(st.cursor+0.5),y1:top,y2:top+RULES.length*rowH,style:"stroke:var(--ink);stroke-width:1.5"},g);
+}
+
+/* =========================================================
+   Pricing
+   ========================================================= */
+function computeEcon(){
+  const M=st.M, D=st.D; st.econ=null;
+  if(!M) return;
+  const VOT=+$("#vot").value||15, L=+$("#secLen").value||10, eps=Math.min(-0.05,+$("#elas").value||-0.4), tau0=+$("#baseToll").value||0;
+  const S=windowState(st.Aall,D,st.cursor-2,st.cursor);
+  if(!S) return;
+  const AC=q=>VOT*L/vAtQ(M,q);
+  const qhi=M.qmax*0.995;
+  const MSC=q=>{const h=Math.max(1,q*1e-3), q1=Math.min(q+h,qhi), q0=Math.max(0,q-h); return AC(q)+q*(AC(q1)-AC(q0))/(q1-q0);};
+  const hyper = S.vs < M.v(M.kc) || S.qLn >= M.qmax*0.98;
+  const q0 = Math.min(S.qLn, M.qmax*0.98);
+  const p0 = AC(q0)+tau0;
+  const P = q=>p0*(1+(q/q0-1)/eps);
+  // solve P(q) = MSC(q) on [0, qhi]
+  let lo=0, hi=qhi;
+  const fz=q=>P(q)-MSC(q);
+  let qs;
+  if(fz(hi)>0) qs=hi; else if(fz(1)<0) qs=0; else { for(let i=0;i<60;i++){const m=(lo+hi)/2; if(fz(m)>0) lo=m; else hi=m;} qs=(lo+hi)/2; }
+  const tauStar = MSC(qs)-AC(qs);
+  let dw=0; const a=Math.min(qs,q0), bq=Math.max(qs,q0), n=60;
+  for(let i=0;i<n;i++){const q=a+(bq-a)*(i+0.5)/n; dw+=(MSC(q)-P(q))*(bq-a)/n;}
+  const mecObs = MSC(q0)-AC(q0);
+  const diff = tauStar - tau0;
+  let rec;
+  if(hyper) rec=`Hypercongested at ${fmtBin(st.cursor+1)}: the static model understates the charge. Set at least ${tauStar.toFixed(2)} € and treat this as a bottleneck (Vickrey) pricing problem with time-varying charges.`;
+  else if(diff>0.05) rec=`Add a congestion surcharge of ${diff.toFixed(2)} € per car (total ${tauStar.toFixed(2)} €). Expected flow drops ${(100*(1-qs/q0)).toFixed(1)}% per lane.`;
+  else if(diff<-0.05) rec=`The flat tariff exceeds the marginal external cost by ${(-diff).toFixed(2)} €. An off-peak discount to ${Math.max(0,tauStar).toFixed(2)} € would raise welfare.`;
+  else rec=`The current tariff of ${tau0.toFixed(2)} € is close to the optimal charge.`;
+  st.econ={VOT,L,eps,tau0,AC,MSC,P,q0,qs,tauStar,dw:dw*D.nL,mecObs,hyper,rec,qhi,S};
+}
+function renderEcon(){
+  const host=$("#chEcon"), E=st.econ, M=st.M;
+  const out=$("#econOut"); out.replaceChildren();
+  if(!E){ host.textContent="Not enough data to fit a speed–density model."; $("#econRec").textContent="—"; return; }
+  $("#econNote").textContent=`${M.name} model · q_max ${M.qmax.toFixed(0)} veh/h/ln`;
+  const cells=[["Observed flow q₀",`${E.S.qLn.toFixed(0)} veh/h/ln`],["MEC at q₀",`${E.mecObs.toFixed(2)} €`],["Optimal charge τ*",`${E.tauStar.toFixed(2)} €`],["Optimal flow q*",`${E.qs.toFixed(0)} veh/h/ln`],["Welfare gain",`${E.dw.toFixed(0)} €/h`],["Free-flow AC",`${E.AC(0).toFixed(2)} €`]];
+  for(const [k,v] of cells){const d=document.createElement("div"); const s=document.createElement("span"); s.textContent=k; const b=document.createElement("b"); b.textContent=v; d.append(s,b); out.appendChild(d);}
+  $("#econRec").textContent=E.rec;
+  const lg=$("#econLegend"); lg.replaceChildren();
+  for(const [c,t,cls] of [["var(--c-car)","Average cost AC (private)","line"],["var(--c-lcv)","Marginal social cost MSC","line"],["var(--ink-2)","Inverse demand P(q)","dash"]]){const s=document.createElement("span"); const i=document.createElement("i"); i.className=cls; if(cls==="dash") i.style.borderColor=c; else i.style.background=c; s.append(i,document.createTextNode(t)); lg.appendChild(s);}
+  const H=300, m={l:46,r:14,t:10,b:34};
+  const {s,w}=newSvg(host,H);
+  const xmax=M.qmax, qsArr=[]; for(let i=0;i<=120;i++) qsArr.push(xmax*0.995*i/120);
+  const acA=qsArr.map(E.AC), mscA=qsArr.map(E.MSC), pA=qsArr.map(E.P);
+  const ymax=Math.max(E.P(0)*0.6, E.MSC(Math.max(E.q0,E.qs))*1.6, E.AC(0)*3);
+  const x=lin(0,xmax,m.l,w-m.r), y=lin(0,ymax,H-m.b,m.t);
+  const g=el("g",{},s);
+  yAxis(g,y,ticks(0,ymax,5),m.l,w-m.r,v=>v.toFixed(v<10?1:0));
+  xAxis(g,x,ticks(0,xmax,5),H-m.b);
+  el("text",{x:w-m.r,y:H-4,"text-anchor":"end",class:"ttl",text:"flow q (veh/h/ln)"},g);
+  el("text",{x:m.l,y:m.t-2+8,"text-anchor":"start",class:"ttl",text:"€ per vehicle",dx:4},g);
+  const cp=v=>Math.min(v,ymax*1.05);
+  const X=qsArr.map(x);
+  el("path",{d:pathD(X,pA.map(v=>v<0||v>ymax*1.05?null:y(v))),style:"fill:none;stroke:var(--ink-2);stroke-width:1.5;stroke-dasharray:5 4"},g);
+  el("path",{d:pathD(X,acA.map(v=>y(cp(v)))),style:"fill:none;stroke:var(--c-car);stroke-width:2"},g);
+  el("path",{d:pathD(X,mscA.map(v=>v>ymax*1.05?null:y(v))),style:"fill:none;stroke:var(--c-lcv);stroke-width:2"},g);
+  // optimal charge bracket
+  const xs=x(E.qs);
+  el("line",{x1:xs,x2:xs,y1:y(E.AC(E.qs)),y2:y(Math.min(E.MSC(E.qs),ymax)),style:"stroke:var(--ink);stroke-width:1.5"},g);
+  el("text",{x:xs+6,y:(y(E.AC(E.qs))+y(Math.min(E.MSC(E.qs),ymax)))/2+4,class:"lbl",text:`τ* ${E.tauStar.toFixed(2)} €`},g);
+  const pt=(q,v,lab,fill)=>{el("circle",{cx:x(q),cy:y(Math.min(v,ymax)),r:5,style:`fill:${fill};stroke:var(--surface);stroke-width:2`},g); el("text",{x:x(q),y:y(Math.min(v,ymax))-10,"text-anchor":"middle",class:"lbl",text:lab},g);};
+  pt(E.q0,E.P(E.q0),"q₀","var(--ink)");
+  pt(E.qs,E.MSC(E.qs),"q*","var(--c-lcv)");
+  // hover
+  const ov=el("rect",{x:m.l,y:m.t,width:w-m.l-m.r,height:H-m.t-m.b,style:"fill:transparent"},s);
+  const ch=el("line",{y1:m.t,y2:H-m.b,style:"stroke:var(--axis);stroke-width:1",visibility:"hidden"},s);
+  ov.addEventListener("pointermove",ev=>{const r=s.getBoundingClientRect(); const px=(ev.clientX-r.left)*w/r.width; const q=Math.max(0,Math.min(xmax*0.995,x.inv(px)));
+    ch.setAttribute("x1",x(q)); ch.setAttribute("x2",x(q)); ch.setAttribute("visibility","visible");
+    showTip(ev,`q = ${q.toFixed(0)} veh/h/ln · v = ${vAtQ(M,q).toFixed(1)} km/h`,[{label:"AC",value:E.AC(q).toFixed(2)+" €",color:"var(--c-car)"},{label:"MSC",value:E.MSC(q).toFixed(2)+" €",color:"var(--c-lcv)"},{label:"MEC (toll)",value:(E.MSC(q)-E.AC(q)).toFixed(2)+" €"},{label:"P(q)",value:E.P(q).toFixed(2)+" €",color:"var(--ink-2)"}]);});
+  ov.addEventListener("pointerleave",()=>{ch.setAttribute("visibility","hidden");hideTip();});
+}
+
+/* =========================================================
+   Rendering: time series (flow, speed) with synced crosshair
+   ========================================================= */
+const TS={};
+function renderTS(id, key, unit, yfmt){
+  const host=$(id), D=st.D, A=st.Af;
+  const H=240, m={l:44,r:12,t:10,b:26};
+  const {s,w}=newSvg(host,H);
+  const lanes=[...Array(D.nL).keys()].filter(l=>st.laneOk[l]);
+  const series=lanes.map(l=>{const ys=new Array(D.nBins); for(let b=0;b<D.nBins;b++){const x=laneBin(A,D,b,l); ys[b]=x&&(key==="q"||x.n>=2)?x[key]:null;} return {l,ys};});
+  let ymax=0; for(const sr of series) for(const v of sr.ys) if(v!=null&&v>ymax) ymax=v;
+  ymax = key==="vs" ? Math.max(130,Math.ceil(ymax/10)*10) : Math.max(500, ymax*1.08);
+  const x=lin(0,D.nBins,m.l,w-m.r), y=lin(0,ymax,H-m.b,m.t);
+  const g=el("g",{},s);
+  const [w0,w1]=winRange();
+  el("rect",{x:x(w0),y:m.t,width:x(w1+1)-x(w0),height:H-m.t-m.b,style:"fill:var(--accent-wash)"},g);
+  yAxis(g,y,ticks(0,ymax,5),m.l,w-m.r,yfmt);
+  const tk=[]; for(let b=0;b<=D.nBins;b+=Math.max(12,Math.round(D.nBins/8/12)*12)) tk.push(b);
+  xAxis(g,x,tk,H-m.b,fmtBin);
+  if(key==="q") el("line",{x1:m.l,x2:w-m.r,y1:y(st.qcap),y2:y(st.qcap),style:"stroke:var(--ink-2);stroke-width:1;stroke-dasharray:3 3"},g),
+    el("text",{x:w-m.r,y:y(st.qcap)-4,"text-anchor":"end",class:"ttl",text:`capacity ≈ ${st.qcap.toFixed(0)}`},g);
+  if(key==="vs") el("line",{x1:m.l,x2:w-m.r,y1:y(60),y2:y(60),style:"stroke:var(--critical);stroke-width:1;stroke-dasharray:3 3"},g),
+    el("text",{x:w-m.r,y:y(60)-4,"text-anchor":"end",class:"ttl",text:"congestion threshold 60"},g);
+  const X=[...Array(D.nBins).keys()].map(b=>x(b+0.5));
+  for(const sr of series) el("path",{d:pathD(X,sr.ys.map(v=>v==null?null:y(v))),style:`fill:none;stroke:${laneVar(sr.l,D.nL)};stroke-width:1.6;stroke-linejoin:round`},g);
+  el("line",{x1:x(st.cursor+1),x2:x(st.cursor+1),y1:m.t,y2:H-m.b,style:"stroke:var(--ink);stroke-width:1.5"},g);
+  const ch=el("line",{y1:m.t,y2:H-m.b,style:"stroke:var(--ink-2);stroke-width:1",visibility:"hidden"},s);
+  const dots=series.map(sr=>el("circle",{r:4,style:`fill:${laneVar(sr.l,D.nL)};stroke:var(--surface);stroke-width:2`,visibility:"hidden"},s));
+  const ov=el("rect",{x:m.l,y:m.t,width:w-m.l-m.r,height:H-m.t-m.b,style:"fill:transparent;cursor:crosshair"},s);
+  TS[id]={x,y,ch,dots,series,s,w};
+  const bAt=ev=>{const r=s.getBoundingClientRect(); return Math.max(0,Math.min(D.nBins-1,Math.floor(x.inv((ev.clientX-r.left)*w/r.width))));};
+  ov.addEventListener("pointermove",ev=>{const b=bAt(ev); syncHover(b);
+    showTip(ev,`${fmtBin(b)}–${fmtBin(b+1)}`,series.map(sr=>({label:`Lane ${sr.l+1} ${unit}`,value:sr.ys[b]==null?"–":sr.ys[b].toFixed(key==="q"?0:1),color:laneVar(sr.l,D.nL)})));});
+  ov.addEventListener("pointerleave",()=>{syncHover(null);hideTip();});
+  ov.addEventListener("click",ev=>setCursor(bAt(ev)));
+}
+function syncHover(b){
+  for(const id in TS){const T=TS[id]; if(!T.s.isConnected) continue;
+    if(b==null){T.ch.setAttribute("visibility","hidden"); T.dots.forEach(d=>d.setAttribute("visibility","hidden")); continue;}
+    const px=T.x(b+0.5); T.ch.setAttribute("x1",px); T.ch.setAttribute("x2",px); T.ch.setAttribute("visibility","visible");
+    T.series.forEach((sr,i)=>{const v=sr.ys[b]; const d=T.dots[i]; if(v==null){d.setAttribute("visibility","hidden");return;} d.setAttribute("cx",px); d.setAttribute("cy",T.y(v)); d.setAttribute("visibility","visible");});
+  }
+}
+
+/* heatmap */
+function renderHeat(){
+  const host=$("#chHeat"), D=st.D, A=st.Af;
+  const lanes=[...Array(D.nL).keys()].filter(l=>st.laneOk[l]).reverse();
+  const rowH=26, m={l:56,r:12,t:6,b:26}, H=m.t+lanes.length*rowH+m.b;
+  const {s,w}=newSvg(host,H);
+  const x=lin(0,D.nBins,m.l,w-m.r); const g=el("g",{},s);
+  const edges=[110,100,90,75,60,40,20]; // km/h → step index
+  const step=v=>{let i=0; while(i<edges.length && v<edges[i]) i++; return Math.min(6,i);} ;
+  const cw=(w-m.l-m.r)/D.nBins;
+  lanes.forEach((l,ri)=>{
+    const y=m.t+ri*rowH;
+    el("text",{x:m.l-8,y:y+rowH/2+3.5,"text-anchor":"end",class:"ttl",text:`Lane ${l+1}`},g);
+    for(let b=0;b<D.nBins;b++){const c=laneBin(A,D,b,l); if(!c||c.n<2) continue;
+      el("rect",{x:x(b),y:y+1,width:Math.max(0.6,cw+0.3),height:rowH-2,style:`fill:var(--h${step(c.vs)})`,"data-b":b,"data-l":l},g);}
+  });
+  const tk=[]; for(let b=0;b<=D.nBins;b+=Math.max(12,Math.round(D.nBins/8/12)*12)) tk.push(b);
+  xAxis(g,x,tk,H-m.b,fmtBin);
+  el("rect",{x:x(st.cursor+1)-1,y:m.t,width:2,height:lanes.length*rowH,style:"fill:var(--ink)"},g);
+  const ov=el("rect",{x:m.l,y:m.t,width:w-m.l-m.r,height:lanes.length*rowH,style:"fill:transparent;cursor:crosshair"},s);
+  const at=ev=>{const r=s.getBoundingClientRect(); const px=(ev.clientX-r.left)*w/r.width, py=(ev.clientY-r.top)*H/r.height; return [Math.max(0,Math.min(D.nBins-1,Math.floor(x.inv(px)))), lanes[Math.max(0,Math.min(lanes.length-1,Math.floor((py-m.t)/rowH)))]];};
+  ov.addEventListener("pointermove",ev=>{const [b,l]=at(ev); const c=laneBin(A,D,b,l);
+    showTip(ev,`Lane ${l+1} · ${fmtBin(b)}–${fmtBin(b+1)}`, c?[{label:"km/h space-mean",value:c.vs.toFixed(1),color:`var(--h${step(c.vs)})`},{label:"veh/h",value:c.q.toFixed(0)},{label:"veh/km",value:c.k.toFixed(1)}]:[{label:"no crossings",value:"–"}]);});
+  ov.addEventListener("pointerleave",hideTip);
+  ov.addEventListener("click",ev=>setCursor(at(ev)[0]));
+  const lg=$("#heatLegend"); lg.replaceChildren();
+  const labs=["≥ 110","100–110","90–100","75–90","60–75","40–60","< 40 km/h"];
+  labs.forEach((t,i)=>{const sp=document.createElement("span"); const k=document.createElement("i"); k.style.background=`var(--h${i})`; sp.append(k,document.createTextNode(t)); lg.appendChild(sp);});
+}
+
+/* fundamental diagrams */
+function renderFD(){
+  const D=st.D, pts=st.fdPts, M=st.M, [w0,w1]=winRange();
+  const lg=$("#fdLegend"); lg.replaceChildren();
+  for(const [c,t,cls] of [["var(--pt-base)","5-min lane observation","dot"],["var(--c-car)","Inside analysis window","dot"],["var(--c-lcv)",M?`${M.name} fit`:"fit","line"]]){const s=document.createElement("span"); const i=document.createElement("i"); i.className=cls; i.style.background=c; s.append(i,document.createTextNode(t)); lg.appendChild(s);}
+  const stats=$("#fdStats"); stats.replaceChildren();
+  if(!M){ $("#fdNote").textContent="Not enough observations for a fit"; ["#chVK","#chQK","#chVQ"].forEach(i=>$(i).replaceChildren()); return; }
+  $("#fdNote").textContent=`${pts.length.toLocaleString()} observations (≥ 5 veh) · ${M.name} ${M.par}`;
+  const kmax=Math.max(...pts.map(p=>p.k))*1.1, vmax=Math.max(130,...pts.map(p=>p.vs)), qmax=Math.max(...pts.map(p=>p.q),M.qmax)*1.08;
+  const curveK=[]; for(let i=0;i<=100;i++) curveK.push(kmax*i/100);
+  const panel=(id,xl,yl,X,Y,xmax,ymax,cx,cy)=>{
+    const host=$(id), H=250, m={l:44,r:10,t:18,b:32};
+    const {s,w}=newSvg(host,H); const g=el("g",{},s);
+    const x=lin(0,xmax,m.l,w-m.r), y=lin(0,ymax,H-m.b,m.t);
+    yAxis(g,y,ticks(0,ymax,5),m.l,w-m.r,v=>String(Math.round(v)));
+    xAxis(g,x,ticks(0,xmax,5),H-m.b,v=>String(Math.round(v)));
+    el("text",{x:w-m.r,y:H-2,"text-anchor":"end",class:"ttl",text:xl},g);
+    el("text",{x:m.l+4,y:m.t-6,class:"ttl",text:yl},g);
+    const base=el("g",{},g), hi=el("g",{},g);
+    const P=pts.map(p=>[x(X(p)),y(Y(p)),p]);
+    for(const [px,py,p] of P){ const inW=p.b>=w0&&p.b<=w1; el("circle",{cx:px.toFixed(1),cy:py.toFixed(1),r:inW?3.4:2.4,style:inW?"fill:var(--c-car);stroke:var(--surface);stroke-width:1":"fill:var(--pt-base)"},inW?hi:base); }
+    el("path",{d:pathD(curveK.map(k=>x(cx(k))),curveK.map(k=>{const vv=cy(k); return vv>ymax*1.02||vv<0||cx(k)>xmax?null:y(vv);})),style:"fill:none;stroke:var(--c-lcv);stroke-width:2"},g);
+    const ring=el("circle",{r:7,style:"fill:none;stroke:var(--ink);stroke-width:2",visibility:"hidden"},s);
+    const ov=el("rect",{x:m.l,y:m.t,width:w-m.l-m.r,height:H-m.t-m.b,style:"fill:transparent"},s);
+    ov.addEventListener("pointermove",ev=>{const r=s.getBoundingClientRect(); const px=(ev.clientX-r.left)*w/r.width, py=(ev.clientY-r.top)*H/r.height;
+      let best=null,bd=1e9; for(const q of P){const d=(q[0]-px)**2+(q[1]-py)**2; if(d<bd){bd=d;best=q;}}
+      if(!best||bd>900){ring.setAttribute("visibility","hidden");hideTip();return;}
+      const p=best[2]; ring.setAttribute("cx",best[0]); ring.setAttribute("cy",best[1]); ring.setAttribute("visibility","visible");
+      showTip(ev,`Lane ${p.l+1} · ${fmtBin(p.b)}–${fmtBin(p.b+1)}`,[{label:"veh/h",value:p.q.toFixed(0)},{label:"km/h",value:p.vs.toFixed(1)},{label:"veh/km",value:p.k.toFixed(1)},{label:"vehicles",value:String(p.n)}]);});
+    ov.addEventListener("pointerleave",()=>{ring.setAttribute("visibility","hidden");hideTip();});
+    ov.addEventListener("click",()=>{ if(ring.getAttribute("visibility")==="visible"){ const cxv=+ring.getAttribute("cx"), cyv=+ring.getAttribute("cy"); const hit=P.find(q=>Math.abs(q[0]-cxv)<.01&&Math.abs(q[1]-cyv)<.01); if(hit) setCursor(hit[2].b);} });
+  };
+  panel("#chVK","density k (veh/km/ln)","speed v (km/h)",p=>p.k,p=>p.vs,kmax,vmax,k=>k,k=>M.v(k));
+  panel("#chQK","density k (veh/km/ln)","flow q (veh/h/ln)",p=>p.k,p=>p.q,kmax,qmax,k=>k,k=>k*M.v(k));
+  panel("#chVQ","flow q (veh/h/ln)","speed v (km/h)",p=>p.q,p=>p.vs,qmax,vmax,k=>k*M.v(k),k=>M.v(k));
+  const cells=[["Model",M.name],["R² (speed)",M.r2.toFixed(3)],["Free-flow speed",M.vf.toFixed(1)+" km/h"],["Critical density",M.kc.toFixed(1)+" veh/km"],["Model capacity",M.qmax.toFixed(0)+" veh/h/ln"],["Observed capacity (p97)",st.qcap.toFixed(0)+" veh/h/ln"]];
+  for(const k of ["greenshields","underwood","drake"]) if(st.fits[k]!==M) cells.push([`R² ${st.fits[k].name}`,st.fits[k].r2.toFixed(3)]);
+  for(const [k,v] of cells){const d=document.createElement("div"); const s=document.createElement("span"); s.textContent=k; const b=document.createElement("b"); b.textContent=v; d.append(s,b); stats.appendChild(d);}
+}
+
+/* per-vehicle window samples */
+function windowSample(){
+  const D=st.D, [w0,w1]=winRange();
+  const i0=idxAt(w0*BIN), i1=idxAt((w1+1)*BIN);
+  return {i0,i1};
+}
+function renderHeadway(){
+  const D=st.D, {i0,i1}=windowSample();
+  const hs=[];
+  for(let i=i0;i<i1;i++){ if(D.flag[i]||!st.laneOk[D.lane[i]-1]||!st.clsOk[D.cls[i]]) continue; const h=D.hw[i]; if(h===h && h>0) hs.push(h); }
+  const host=$("#chHw"), stats=$("#hwStats"); stats.replaceChildren();
+  const lg=$("#hwLegend"); lg.replaceChildren();
+  for(const [c,t,cls] of [["var(--c-car)","Observed","" ],["var(--c-lcv)","Shifted exponential","line"],["var(--ink-2)","Negative exponential","dash"]]){const s=document.createElement("span"); const i=document.createElement("i"); if(cls) i.className=cls; if(cls==="dash") i.style.borderColor=c; else i.style.background=c; s.append(i,document.createTextNode(t)); lg.appendChild(s);}
+  $("#hwNote").textContent=`${hs.length.toLocaleString()} headways · window ${fmtBin(winRange()[0])}–${fmtBin(winRange()[1]+1)}`;
+  if(hs.length<20){host.textContent="Too few headways in this window."; return;}
+  hs.sort((a,b)=>a-b);
+  const n=hs.length, mean=hs.reduce((a,b)=>a+b,0)/n, sd=Math.sqrt(hs.reduce((a,b)=>a+(b-mean)**2,0)/(n-1));
+  const tau=Math.max(0,Math.min(hs[0]*0.999+ (mean-sd>hs[0]?0:0), mean-sd)), lamS=1/(mean-tau), lam=1/mean;
+  const cdfE=t=>1-Math.exp(-lam*t), cdfS=t=>t<tau?0:1-Math.exp(-lamS*(t-tau));
+  let ksE=0,ksS=0; for(let i=0;i<n;i++){const F1=(i+1)/n,F0=i/n; ksE=Math.max(ksE,Math.abs(cdfE(hs[i])-F1),Math.abs(cdfE(hs[i])-F0)); ksS=Math.max(ksS,Math.abs(cdfS(hs[i])-F1),Math.abs(cdfS(hs[i])-F0));}
+  const bw=0.25, xmax=Math.min(12, Math.max(4, Math.ceil(hs[Math.floor(n*0.95)]))), nb=Math.round(xmax/bw);
+  const cnt=new Array(nb).fill(0); for(const h of hs){const b=Math.floor(h/bw); if(b<nb) cnt[b]++;}
+  const dens=cnt.map(c=>c/n/bw);
+  const pdfE=t=>lam*Math.exp(-lam*t), pdfS=t=>t<tau?0:lamS*Math.exp(-lamS*(t-tau));
+  const ymax=Math.max(...dens, pdfS(tau))*1.1;
+  const H=250, m={l:44,r:10,t:10,b:32};
+  const {s,w}=newSvg(host,H); const g=el("g",{},s);
+  const x=lin(0,xmax,m.l,w-m.r), y=lin(0,ymax,H-m.b,m.t);
+  yAxis(g,y,ticks(0,ymax,4),m.l,w-m.r,v=>v.toFixed(2));
+  xAxis(g,x,ticks(0,xmax,6),H-m.b,v=>String(v));
+  el("text",{x:w-m.r,y:H-2,"text-anchor":"end",class:"ttl",text:"headway (s)"},g);
+  el("text",{x:m.l+4,y:m.t+8,class:"ttl",text:"density (1/s)"},g);
+  const bars=[];
+  for(let i=0;i<nb;i++){ const x0=x(i*bw)+1, x1=x((i+1)*bw)-1; const r=el("rect",{x:x0,y:y(dens[i]),width:Math.max(1,x1-x0),height:Math.max(0,y(0)-y(dens[i])),style:`fill:var(--c-car)${i*bw<1?";opacity:1":";opacity:.75"}`},g); bars.push(r); }
+  const T=[]; for(let i=0;i<=200;i++) T.push(xmax*i/200);
+  el("path",{d:pathD(T.map(x),T.map(t=>y(Math.min(ymax,pdfE(t))))),style:"fill:none;stroke:var(--ink-2);stroke-width:1.5;stroke-dasharray:5 4"},g);
+  el("path",{d:pathD(T.map(x),T.map(t=>t<tau?null:y(Math.min(ymax,pdfS(t))))),style:"fill:none;stroke:var(--c-lcv);stroke-width:2"},g);
+  el("line",{x1:x(2),x2:x(2),y1:m.t,y2:H-m.b,style:"stroke:var(--critical);stroke-width:1;stroke-dasharray:3 3"},g);
+  el("text",{x:x(2)+4,y:m.t+22,class:"ttl",text:"2-second rule"},g);
+  const ov=el("rect",{x:m.l,y:m.t,width:w-m.l-m.r,height:H-m.t-m.b,style:"fill:transparent"},s);
+  ov.addEventListener("pointermove",ev=>{const r=s.getBoundingClientRect(); const t=x.inv((ev.clientX-r.left)*w/r.width); const i=Math.max(0,Math.min(nb-1,Math.floor(t/bw)));
+    bars.forEach((b,j)=>b.style.opacity=j===i?"1":".75");
+    showTip(ev,`${(i*bw).toFixed(2)}–${((i+1)*bw).toFixed(2)} s`,[{label:"vehicles",value:String(cnt[i]),color:"var(--c-car)"},{label:"share",value:(100*cnt[i]/n).toFixed(1)+"%"},{label:"shifted exp. expects",value:(100*(cdfS((i+1)*bw)-cdfS(i*bw))).toFixed(1)+"%",color:"var(--c-lcv)"}]);});
+  ov.addEventListener("pointerleave",()=>{bars.forEach((b,j)=>b.style.opacity=j*bw<1?"1":".75");hideTip();});
+  const lt1=hs.filter(h=>h<1).length/n, lt2=hs.filter(h=>h<2).length/n;
+  const cells=[["Mean headway",mean.toFixed(2)+" s"],["Std. deviation",sd.toFixed(2)+" s"],["CV",(sd/mean).toFixed(2)],["Under 1 s",(100*lt1).toFixed(1)+"%"],["Under 2 s",(100*lt2).toFixed(1)+"%"],["Shift τ",tau.toFixed(2)+" s"],["KS D neg. exp.",ksE.toFixed(3)],["KS D shifted",ksS.toFixed(3)]];
+  for(const [k,v] of cells){const d=document.createElement("div"); const sp=document.createElement("span"); sp.textContent=k; const b=document.createElement("b"); b.textContent=v; d.append(sp,b); stats.appendChild(d);}
+}
+
+function pct(a,p){ if(!a.length) return NaN; const i=(a.length-1)*p, lo=Math.floor(i), hi=Math.ceil(i); return a[lo]+(a[hi]-a[lo])*(i-lo); }
+function renderSpeed(){
+  const D=st.D, {i0,i1}=windowSample();
+  const bw=5, vmax=180, nb=vmax/bw;
+  const cnt=[...Array(5)].map(()=>new Array(nb).fill(0));
+  const all=[]; let over=0, inv=0;
+  for(let i=i0;i<i1;i++){ if(D.flag[i]) continue; const c=D.cls[i]; if(!st.laneOk[D.lane[i]-1]||!st.clsOk[c]) continue; const v=D.v[i]; all.push(v); inv+=1/v; if(v>LIMIT[c]) over++; const b=Math.min(nb-1,Math.floor(v/bw)); cnt[c][b]++; }
+  const host=$("#chSp"), stats=$("#spStats"); stats.replaceChildren();
+  $("#spNote").textContent=`${all.length.toLocaleString()} vehicles · 5 km/h bins`;
+  if(all.length<20){host.textContent="Too few vehicles in this window."; return;}
+  all.sort((a,b)=>a-b);
+  const tot=new Array(nb).fill(0); for(let c=0;c<5;c++) for(let b=0;b<nb;b++) tot[b]+=cnt[c][b];
+  const ymax=Math.max(...tot)*1.1;
+  const H=250, m={l:44,r:10,t:10,b:32};
+  const {s,w}=newSvg(host,H); const g=el("g",{},s);
+  const x=lin(0,vmax,m.l,w-m.r), y=lin(0,ymax,H-m.b,m.t);
+  yAxis(g,y,ticks(0,ymax,4),m.l,w-m.r,v=>String(Math.round(v)));
+  xAxis(g,x,ticks(0,vmax,6),H-m.b,v=>String(v));
+  el("text",{x:w-m.r,y:H-2,"text-anchor":"end",class:"ttl",text:"spot speed (km/h)"},g);
+  el("text",{x:m.l+4,y:m.t+8,class:"ttl",text:"vehicles"},g);
+  for(let b=0;b<nb;b++){ let acc=0; const x0=x(b*bw)+1, x1=x((b+1)*bw)-1;
+    for(let c=0;c<5;c++){ const v=cnt[c][b]; if(!v) continue; const yTop=y(acc+v), yBot=y(acc); el("rect",{x:x0,y:yTop,width:Math.max(1,x1-x0),height:Math.max(0.5,yBot-yTop-(acc?1:0)),style:`fill:var(${CVAR[c]})`},g); acc+=v; } }
+  const p15=pct(all,.15), p50=pct(all,.5), p85=pct(all,.85);
+  [[p15,"v15"],[p50,"v50"],[p85,"v85"]].forEach(([v,l],i)=>{el("line",{x1:x(v),x2:x(v),y1:m.t+14,y2:H-m.b,style:"stroke:var(--ink);stroke-width:1;stroke-dasharray:"+(l==="v85"?"0":"2 3")},g); el("text",{x:x(v),y:m.t+10,"text-anchor":"middle",class:"lbl",text:l},g);});
+  const ov=el("rect",{x:m.l,y:m.t,width:w-m.l-m.r,height:H-m.t-m.b,style:"fill:transparent"},s);
+  ov.addEventListener("pointermove",ev=>{const r=s.getBoundingClientRect(); const v=x.inv((ev.clientX-r.left)*w/r.width); const b=Math.max(0,Math.min(nb-1,Math.floor(v/bw)));
+    showTip(ev,`${b*bw}–${(b+1)*bw} km/h · ${tot[b]} vehicles`,CLASSES.map((c,i)=>({label:c,value:String(cnt[i][b]),color:`var(${CVAR[i]})`})).filter((r,i)=>st.clsOk[i]));});
+  ov.addEventListener("pointerleave",hideTip);
+  const n=all.length, mean=all.reduce((a,b)=>a+b,0)/n, sd=Math.sqrt(all.reduce((a,b)=>a+(b-mean)**2,0)/(n-1));
+  // 10 km/h pace
+  let best=0,bs=0; for(let lo=0;lo<=170;lo++){ let j0=idxLE(all,lo), j1=idxLE(all,lo+10); if(j1-j0>best){best=j1-j0;bs=lo;} }
+  const cells=[["Time-mean speed",mean.toFixed(1)+" km/h"],["Space-mean speed",(n/inv).toFixed(1)+" km/h"],["Std. deviation",sd.toFixed(1)+" km/h"],["v15 / v50",p15.toFixed(0)+" / "+p50.toFixed(0)],["v85",p85.toFixed(1)+" km/h"],["10 km/h pace",`${bs}–${bs+10} (${(100*best/n).toFixed(0)}%)`],["Over class limit",(100*over/n).toFixed(1)+"%"]];
+  for(const [k,v] of cells){const d=document.createElement("div"); const sp=document.createElement("span"); sp.textContent=k; const b=document.createElement("b"); b.textContent=v; d.append(sp,b); stats.appendChild(d);}
+}
+function idxLE(a,v){let lo=0,hi=a.length; while(lo<hi){const m=(lo+hi)>>1; if(a[m]<v) lo=m+1; else hi=m;} return lo;}
+
+function renderLane(){
+  const D=st.D, A=st.Af, [w0,w1]=winRange();
+  const lanes=[...Array(D.nL).keys()].filter(l=>st.laneOk[l]).reverse();
+  const host=$("#chLane");
+  const rowH=36, m={l:64,r:60,t:6,b:26}, H=m.t+lanes.length*rowH+m.b;
+  const {s,w}=newSvg(host,H); const g=el("g",{},s);
+  const x=lin(0,1,m.l,w-m.r);
+  const totAll=lanes.reduce((a,l)=>a+sumF(A,D,w0,w1,[l],f.n),0)||1;
+  xAxis(g,x,[0,.25,.5,.75,1],H-m.b,v=>Math.round(v*100)+"%");
+  lanes.forEach((l,ri)=>{
+    const y=m.t+ri*rowH+6, h=rowH-12;
+    const n=sumF(A,D,w0,w1,[l],f.n);
+    el("text",{x:m.l-8,y:y+h/2+4,"text-anchor":"end",class:"ttl",text:`Lane ${l+1}`},g);
+    el("text",{x:w-m.r+6,y:y+h/2+4,class:"lbl",text:`${(100*n/totAll).toFixed(0)}%`},g);
+    let acc=0;
+    for(let c=0;c<5;c++){ if(!st.clsOk[c]) continue; const v=sumF(A,D,w0,w1,[l],f.c0+c); if(!v) continue; const sh=v/(n||1);
+      const r=el("rect",{x:x(acc)+(acc?1:0),y,width:Math.max(0.5,x(acc+sh)-x(acc)-(acc?1:0)),height:h,rx:acc===0?3:0,style:`fill:var(${CVAR[c]})`},g);
+      r.addEventListener("pointermove",ev=>showTip(ev,`Lane ${l+1} · ${CLASSES[c]}`,[{label:"of lane",value:(100*sh).toFixed(1)+"%",color:`var(${CVAR[c]})`},{label:"vehicles",value:String(v)}]));
+      r.addEventListener("pointerleave",hideTip);
+      if(sh>0.08) el("text",{x:x(acc+sh/2),y:y+h/2+4,"text-anchor":"middle",style:"fill:#fff;font-weight:600",text:(100*sh).toFixed(0)+"%"},g).style.pointerEvents="none";
+      acc+=sh; }
+  });
+}
+function renderRevenue(){
+  const D=st.D, A=st.Af, [w0,w1]=winRange(), all=[...Array(D.nL).keys()];
+  const tau0=+$("#baseToll").value||0, hrs=(w1-w0+1)*BIN/3600;
+  const tb=$("#revTbl"); tb.replaceChildren();
+  const hd=tb.createTHead().insertRow(); ["Class","Vehicles","Share","PCE","Tariff","Revenue","€/h"].forEach((t,i)=>{const th=document.createElement("th"); th.textContent=t; if(i) th.className="n"; hd.appendChild(th);});
+  const bd=tb.createTBody(); let tn=0,tr=0,tp=0;
+  const ns=CLASSES.map((_,c)=>st.clsOk[c]?sumF(A,D,w0,w1,all,f.c0+c):0); const N=ns.reduce((a,b)=>a+b,0)||1;
+  CLASSES.forEach((c,i)=>{ if(!st.clsOk[i]) return; const n=ns[i], rev=n*tau0*TARIFF_MULT[i]; tn+=n; tr+=rev; tp+=n*PCE[i];
+    const r=bd.insertRow(); const td0=r.insertCell(); const k=document.createElement("i"); k.style.cssText=`display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;background:var(${CVAR[i]})`; td0.append(k,document.createTextNode(c));
+    [n.toLocaleString(),(100*n/N).toFixed(1)+"%",(n*PCE[i]).toLocaleString(),(tau0*TARIFF_MULT[i]).toFixed(2)+" €",rev.toLocaleString(undefined,{maximumFractionDigits:0})+" €",(rev/hrs).toLocaleString(undefined,{maximumFractionDigits:0})].forEach(v=>{const td=r.insertCell(); td.className="n"; td.textContent=v;}); });
+  const r=bd.insertRow(); r.style.fontWeight="700"; r.insertCell().textContent="Total";
+  [tn.toLocaleString(),"100%",tp.toLocaleString(),"",tr.toLocaleString(undefined,{maximumFractionDigits:0})+" €",(tr/hrs).toLocaleString(undefined,{maximumFractionDigits:0})].forEach(v=>{const td=r.insertCell(); td.className="n"; td.textContent=v;});
+}
+function renderViolations(){
+  const D=st.D, {i0,i1}=windowSample(), list=[];
+  for(let i=i0;i<i1;i++){ if(D.flag[i]) continue; const c=D.cls[i]; if(!st.laneOk[D.lane[i]-1]||!st.clsOk[c]) continue; const ex=D.v[i]-LIMIT[c]; if(ex>20) list.push([ex,i]); }
+  list.sort((a,b)=>b[0]-a[0]);
+  $("#violNote").textContent=`${list.length.toLocaleString()} crossings over limit + 20 km/h · top 60`;
+  const tb=$("#violTbl"); tb.replaceChildren();
+  const hd=tb.createTHead().insertRow(); ["Time","Lane","Class","Plate","Speed","Limit","Excess","Headway"].forEach((t,i)=>{const th=document.createElement("th"); th.textContent=t; if(i>3) th.className="n"; hd.appendChild(th);});
+  const bd=tb.createTBody();
+  for(const [ex,i] of list.slice(0,60)){ const r=bd.insertRow(); const c=D.cls[i];
+    [fmtT(D.t[i]),String(D.lane[i]),CLASSES[c],mask(D.plate[i])].forEach(v=>{r.insertCell().textContent=v;});
+    [D.v[i].toFixed(0),String(LIMIT[c]),"+"+ex.toFixed(0),D.hw[i]===D.hw[i]?D.hw[i].toFixed(1)+" s":"–"].forEach(v=>{const td=r.insertCell(); td.className="n"; td.textContent=v;}); }
+  if(!list.length){const r=bd.insertRow(); const td=r.insertCell(); td.colSpan=8; td.textContent="No violations in this window.";}
+}
+function renderFrequent(){
+  const D=st.D, mp=new Map();
+  for(let i=0;i<D.n;i++){ if(D.flag[i]||!D.plate[i]) continue; const c=D.cls[i]; if(!st.clsOk[c]||!st.laneOk[D.lane[i]-1]) continue; let e=mp.get(D.plate[i]); if(!e){e={c,t:[]}; mp.set(D.plate[i],e);} e.t.push(D.t[i]); }
+  const rows=[...mp.entries()].filter(([,e])=>e.t.length>=3).sort((a,b)=>b[1].t.length-a[1].t.length);
+  const tb=$("#freqTbl"); tb.replaceChildren();
+  const hd=tb.createTHead().insertRow(); ["Plate","Class","Crossings","First","Last","Median gap"].forEach((t,i)=>{const th=document.createElement("th"); th.textContent=t; if(i>1) th.className="n"; hd.appendChild(th);});
+  const bd=tb.createTBody();
+  for(const [p,e] of rows.slice(0,60)){ const r=bd.insertRow(); const gaps=e.t.slice(1).map((t,i)=>t-e.t[i]).sort((a,b)=>a-b); const med=gaps[Math.floor(gaps.length/2)];
+    r.insertCell().textContent=mask(p); r.insertCell().textContent=CLASSES[e.c];
+    [String(e.t.length),fmtT(e.t[0]),fmtT(e.t[e.t.length-1]),Math.round(med/60)+" min"].forEach(v=>{const td=r.insertCell(); td.className="n"; td.textContent=v;}); }
+  if(!rows.length){const r=bd.insertRow(); const td=r.insertCell(); td.colSpan=6; td.textContent="No plate appears three or more times.";}
+}
+function renderDQ(){
+  const D=st.D, cnt=[0,0,0,0]; const ln=Array(D.nL).fill(0), un=Array(D.nL).fill(0);
+  for(let i=0;i<D.n;i++){cnt[D.flag[i]]++; if(!D.flag[i]){ln[D.lane[i]-1]++; if(!D.plate[i]) un[D.lane[i]-1]++;}}
+  const host=$("#dq"); host.replaceChildren();
+  const row=(k,v)=>{const d=document.createElement("div"); d.className="row"; const s=document.createElement("span"); s.textContent=k; const b=document.createElement("b"); b.textContent=v; d.append(s,b); host.appendChild(d);};
+  row("Records received",D.n.toLocaleString());
+  row("Kept for analysis",`${cnt[0].toLocaleString()} (${(100*cnt[0]/D.n).toFixed(2)}%)`);
+  row("Duplicate reads (same plate, lane, < 3 s)",cnt[1].toLocaleString());
+  row("Implausible speed (> 200 or < 1 km/h)",cnt[2].toLocaleString());
+  row("Implausible headway (< 0.3 s)",cnt[3].toLocaleString());
+  for(let l=0;l<D.nL;l++) row(`Lane ${l+1} plate read rate`,ln[l]?(100-100*un[l]/ln[l]).toFixed(2)+"%":"–");
+}
+function renderAggTable(){
+  const D=st.D, A=st.Af, tb=$("#aggTbl"); tb.replaceChildren();
+  const lanes=[...Array(D.nL).keys()].filter(l=>st.laneOk[l]);
+  const hd=tb.createTHead().insertRow(); const h0=document.createElement("th"); h0.textContent="Interval"; hd.appendChild(h0);
+  for(const l of lanes) for(const t of ["q","v̄ₛ","k"]){const th=document.createElement("th"); th.className="n"; th.textContent=`L${l+1} ${t}`; hd.appendChild(th);}
+  const bd=tb.createTBody(); const frag=document.createDocumentFragment();
+  for(let b=0;b<D.nBins;b++){ const r=document.createElement("tr"); const td=document.createElement("td"); td.textContent=`${fmtBin(b)}–${fmtBin(b+1)}`; r.appendChild(td);
+    for(const l of lanes){ const x=laneBin(A,D,b,l); for(const v of x?[x.q.toFixed(0),x.vs.toFixed(1),x.k.toFixed(1)]:["–","–","–"]){const c=document.createElement("td"); c.className="n"; c.textContent=v; r.appendChild(c);} }
+    frag.appendChild(r); }
+  bd.appendChild(frag);
+}
+
+/* legends & toggles */
+function buildToggles(){
+  const D=st.D, lt=$("#laneToggles"); lt.replaceChildren();
+  for(let l=0;l<D.nL;l++){
+    const lab=document.createElement("label"); lab.className="tog"; const cb=document.createElement("input"); cb.type="checkbox"; cb.id=`lane${l}`; cb.checked=st.laneOk[l];
+    cb.addEventListener("change",()=>{st.laneOk[l]=cb.checked; if(!st.laneOk.some(Boolean)){st.laneOk[l]=true;cb.checked=true;} refilter();});
+    const i=document.createElement("i"); i.style.background=laneVar(l,D.nL); lab.append(cb,i,document.createTextNode(`Lane ${l+1}${l===0?" (right)":l===D.nL-1?" (left)":""}`)); lt.appendChild(lab);
+  }
+  const ct=$("#classToggles"); ct.replaceChildren();
+  CLASSES.forEach((c,i)=>{const lab=document.createElement("label"); lab.className="tog"; const cb=document.createElement("input"); cb.type="checkbox"; cb.id=`cls${i}`; cb.checked=st.clsOk[i];
+    cb.addEventListener("change",()=>{st.clsOk[i]=cb.checked; if(!st.clsOk.some(Boolean)){st.clsOk[i]=true;cb.checked=true;} refilter();});
+    const k=document.createElement("i"); k.style.background=`var(${CVAR[i]})`; lab.append(cb,k,document.createTextNode(c)); ct.appendChild(lab);});
+  document.querySelectorAll(".lane-legend").forEach(lg=>{lg.replaceChildren(); for(let l=0;l<D.nL;l++){const s=document.createElement("span"); const i=document.createElement("i"); i.className="line"; i.style.background=laneVar(l,D.nL); s.append(i,document.createTextNode(`Lane ${l+1}`)); lg.appendChild(s);}});
+  document.querySelectorAll(".class-legend").forEach(lg=>{lg.replaceChildren(); CLASSES.forEach((c,i)=>{const s=document.createElement("span"); const k=document.createElement("i"); k.style.background=`var(${CVAR[i]})`; s.append(k,document.createTextNode(c)); lg.appendChild(s);});});
+}
+
+/* =========================================================
+   Orchestration
+   ========================================================= */
+function renderCursorDependent(){
+  computeEcon();
+  renderDSS(); renderTimeline(); renderEcon();
+  renderTS("#chFlow","q","veh/h",v=>String(Math.round(v)));
+  renderTS("#chSpeed","vs","km/h",v=>String(Math.round(v)));
+  renderHeat(); renderFD(); renderHeadway(); renderSpeed(); renderLane(); renderRevenue(); renderViolations();
+}
+function renderAll(){ renderCursorDependent(); renderFrequent(); renderDQ(); renderAggTable(); }
+let raf=0;
+function setCursor(b){ st.cursor=Math.max(0,Math.min(st.D.nBins-1,b)); $("#cursor").value=st.cursor; cancelAnimationFrame(raf); raf=requestAnimationFrame(renderCursorDependent); }
+
+$("#cursor").addEventListener("input",e=>setCursor(+e.target.value));
+$("#winSeg").addEventListener("click",e=>{const b=e.target.closest("button"); if(!b) return; st.win=+b.dataset.w; $("#winSeg").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false")); renderCursorDependent();});
+$("#modelSel").addEventListener("change",e=>{st.model=e.target.value; pickModel(); renderCursorDependent();});
+["#vot","#secLen","#elas","#baseToll"].forEach(s=>$(s).addEventListener("input",()=>{computeEcon(); renderDSS(); renderEcon(); renderRevenue();}));
+$("#playBtn").addEventListener("click",()=>{
+  const b=$("#playBtn");
+  if(st.playing){clearInterval(st.playing); st.playing=null; b.textContent="▶ Replay"; b.setAttribute("aria-pressed","false"); return;}
+  b.textContent="❚❚ Pause"; b.setAttribute("aria-pressed","true");
+  st.playing=setInterval(()=>{ if(st.cursor>=st.D.nBins-1){ setCursor(0); } else setCursor(st.cursor+1); },450);
+});
+$("#sampleBtn").addEventListener("click",()=>loadDataset(generateSample()));
+
+/* CSV import */
+function parseCSV(text){
+  const lines=text.split(/\r?\n/).filter(l=>l.trim());
+  if(lines.length<2) throw new Error("The file has no data rows.");
+  const delim=[",",";","\t"].sort((a,b)=>lines[0].split(b).length-lines[0].split(a).length)[0];
+  const split=l=>l.split(delim).map(s=>s.trim().replace(/^"|"$/g,""));
+  const hdr=split(lines[0]).map(h=>h.toLowerCase());
+  const find=re=>hdr.findIndex(h=>re.test(h));
+  const ci={t:find(/time|date/), lane:find(/lane/), cls:find(/type|class|categ/), v:find(/speed|velocity/), p:find(/plate|licen|anpr|lpr/), h:find(/headway|gap/)};
+  const miss=["t","lane","cls","v"].filter(k=>ci[k]<0);
+  if(miss.length) throw new Error("Missing columns: "+miss.map(k=>({t:"timestamp",lane:"lane",cls:"vehicle_type",v:"speed"})[k]).join(", ")+".");
+  const mapCls=s=>{s=s.toLowerCase(); if(/moto|bike|2w/.test(s)) return 4; if(/bus|coach/.test(s)) return 2; if(/hgv|truck|lorry|heavy|trailer|semi/.test(s)) return 3; if(/lcv|van|light comm|pickup/.test(s)) return 1; return 0;};
+  const rows=[], laneIds=new Map(); let tmin=Infinity;
+  for(let i=1;i<lines.length;i++){
+    const c=split(lines[i]); const ts=c[ci.t]; let t;
+    if(/^\d+(\.\d+)?$/.test(ts)){ t=+ts; if(t>1e12) t/=1000; } else { t=Date.parse(ts.replace(" ","T"))/1000; }
+    const v=parseFloat(c[ci.v]); if(!isFinite(t)||!isFinite(v)) continue;
+    const lk=c[ci.lane]; if(!laneIds.has(lk)) laneIds.set(lk,null);
+    rows.push([t,lk,mapCls(c[ci.cls]||""),v,ci.h>=0?parseFloat(c[ci.h]):NaN,ci.p>=0?(c[ci.p]||"").toUpperCase():""]);
+    if(t<tmin) tmin=t;
+  }
+  if(!rows.length) throw new Error("No rows had a readable timestamp and speed.");
+  const keys=[...laneIds.keys()].sort((a,b)=>(+a)-(+b)||String(a).localeCompare(String(b)));
+  if(keys.length>8) throw new Error(`Found ${keys.length} lane values; the dashboard supports up to 8.`);
+  keys.forEach((k,i)=>laneIds.set(k,i+1));
+  const d0=new Date(tmin*1000); d0.setHours(0,0,0,0); const base=d0.getTime()/1000;
+  const maxSpan=7*86400;
+  const recs=rows.map(r=>[r[0]-base,laneIds.get(r[1]),r[2],r[3],r[4],r[5]]).filter(r=>r[0]<maxSpan);
+  // recompute missing headways per lane
+  recs.sort((a,b)=>a[0]-b[0]); const lastT={};
+  for(const r of recs){ if(!(r[4]>0) && lastT[r[1]]!=null) r[4]=r[0]-lastT[r[1]]; lastT[r[1]]=r[0]; }
+  return buildDataset(recs, base*1000, keys.length, `Imported CSV · ${recs.length.toLocaleString()} crossings · ${keys.length} lanes`);
+}
+$("#csvIn").addEventListener("change",e=>{
+  const file=e.target.files[0]; if(!file) return;
+  const rd=new FileReader();
+  rd.onload=()=>{ try{ st.cursor=0; const D=parseCSV(rd.result); loadDataset(D); setCursor(Math.min(D.nBins-1,96)); } catch(err){ $("#dsLabel").textContent="Import failed: "+err.message+" Showing the previous data."; } e.target.value=""; };
+  rd.readAsText(file);
+});
+
+const CSV_EX=`timestamp,lane,vehicle_type,speed_kmh,license_plate,headway_s
+2026-09-24T07:58:01.240,1,HGV,84.2,KT 482 BR,3.10
+2026-09-24T07:58:01.910,3,Car,118.6,HX 219 NA,1.42
+2026-09-24T07:58:02.305,2,LCV,101.3,,2.05
+2026-09-24T07:58:02.870,3,Car,121.0,MB 730 RE,0.96`;
+$("#csvSample").textContent=CSV_EX;
+$("#copyCsv").addEventListener("click",()=>{ const b=$("#copyCsv"); navigator.clipboard.writeText(CSV_EX).then(()=>{b.textContent="Copied";setTimeout(()=>b.textContent="Copy example",1500);}).catch(()=>{const r=document.createRange(); r.selectNodeContents($("#csvSample")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent="Press Ctrl+C to copy";}); });
+
+/* responsive + theme re-render */
+let rt=0;
+const ro=new ResizeObserver(()=>{clearTimeout(rt); rt=setTimeout(()=>{ if(st.D) renderCursorDependent(); },150);});
+ro.observe(document.querySelector("main"));
+
+loadDataset(generateSample());
+</script>
+</body>
+</html>
